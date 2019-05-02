@@ -97,20 +97,20 @@ namespace DiscordBot.Features
 
 				bool isMentioned = message.HasMentionPrefix(Client.CurrentUser, ref commandStartIndex);
 
-				if (isMentioned || message.HasCharPrefix('!', ref commandStartIndex))
-				{
-					await CheckCommand(message, commandStartIndex);
-				}
-				else
-				{
-					WikiSearcher.Process(message);
+                if (isMentioned || message.HasCharPrefix('!', ref commandStartIndex))
+                {
+                    await CheckCommand(message, commandStartIndex);
 
-					if (isMentioned)
-					{
-						await DoYouCare.Process(message);
-					}
-				}
-			}
+                    if (isMentioned)
+                    {
+                        await DoYouCare.Process(message);
+                    }
+                }
+                else
+                {
+                    WikiSearcher.Process(message);
+                }
+            }
 			catch (Exception e)
 			{
 				Console.WriteLine("Failed to process message : " + arg.Content);

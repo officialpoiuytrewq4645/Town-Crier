@@ -296,7 +296,6 @@
     <Compile Include="Command Modules\PointCounter.cs" />
     <Compile Include="Command Modules\ServerTeamAlert.cs" />
     <Compile Include="Command Modules\WikiSearcher.cs" />
-    <Compile Include="FileDatabase.cs" />
     <Compile Include="Command Modules\AccountModule.cs" />
     <Compile Include="Command Modules\BetModule.cs" />
     <Compile Include="Command Modules\ChatCraft\ChatCraft.cs" />

@@ -8,7 +8,7 @@ using DiscordBot.Modules.ChatCraft;
 namespace DiscordBot.Features
 {
 	[Group("who")]
-	public class WhoAmIModule : CrierModuleBase
+	public class WhoModule : CrierModuleBase
 	{
 		[Command("help")]
 		public async Task Help()

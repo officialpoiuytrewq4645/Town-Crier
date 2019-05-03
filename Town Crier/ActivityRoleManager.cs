@@ -188,7 +188,9 @@ namespace ActivityRoles
 				activity.InitializeForGuild(guild);
 
 				//Not awaiting so they all go at once
-				await activity.ApplyRole(guild);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+				activity.ApplyRole(guild);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 			}
 		}
 
@@ -214,13 +216,17 @@ namespace ActivityRoles
 			await Task.CompletedTask;
 		}
 
-		async Task RemoveRoles(SocketGuild guild)
+		Task RemoveRoles(SocketGuild guild)
 		{
 			foreach (ActivityDefinition activity in activities)
 			{
 				//Not awaiting so they all go at once
-				await activity.RemoveRole(guild);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+				activity.RemoveRole(guild);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 			}
+
+			return Task.CompletedTask;
 		}
 	}
 }

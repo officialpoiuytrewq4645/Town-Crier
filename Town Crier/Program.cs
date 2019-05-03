@@ -75,9 +75,7 @@ class Program
 	{
 		return program.client.GetGuild(id);
 	}
-
-	#region Tasks
-
+	
 	public static async Task ExecuteCommand(string command, ICommandContext context)
 	{
 		await program.commandsProcessor.ExecuteCommand(command, context);
@@ -139,6 +137,4 @@ class Program
 
 		return Task.CompletedTask;
 	}
-
-	#endregion
 }

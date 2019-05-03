@@ -15,6 +15,7 @@ using System.Timers;
 using Alta.WebApi.Models.DTOs.Responses;
 using Discord.WebSocket;
 using Alta.WebApi.Models;
+using DiscordBot.Database;
 
 namespace DiscordBot
 {
@@ -68,6 +69,10 @@ namespace DiscordBot
 			timer.Start();
 
 			LoadDatabase();
+		}
+
+		public AccountModule(DatabaseAccess database) : base(database)
+		{
 		}
 
 		public static void EnsureLoaded() { }

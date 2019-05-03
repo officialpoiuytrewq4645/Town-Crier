@@ -1,6 +1,7 @@
 ﻿using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Database;
 using DiscordBot.Features.Wiki;
 using DiscordBot.Modules.ChatCraft;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +31,7 @@ namespace DiscordBot.Features
 			
 			map.AddSingleton(client);
 			map.AddSingleton<InteractiveService>();
+			map.AddScoped<DatabaseAccess>();
 			
 			services = map.BuildServiceProvider();
 

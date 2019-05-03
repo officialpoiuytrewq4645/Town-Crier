@@ -1,15 +1,18 @@
 using Alta.WebApi.Models;
 using Alta.WebApi.Models.DTOs.Responses;
+using Dapper.Contrib.Extensions;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot;
+using DiscordBot.Database;
 using DiscordBot.Modules.ChatCraft;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -565,6 +568,47 @@ namespace DiscordBot
 
 public class CrierModuleBase : InteractiveBase
 {
+	protected DatabaseAccess database;
+	
+	public CrierModuleBase(DatabaseAccess database)
+	{
+		this.database = database;
+	}
+
+	public Task<User> GetUser()
+	{
+		return GetUser(Context.User);
+	}
+
+	public async Task<User> GetUser(IUser target)
+	{
+		IDbConnection connection = await database.Connect();
+
+		User user = await connection.GetAsync<User>(target.Id);
+
+		if (user == null)
+		{
+			user = new User()
+			{
+				DiscordID = target.Id,
+				Username = target.Username,
+				Coins = 20,
+				IsAdmin = false,
+				JoinDate = target.CreatedAt.UtcDateTime,
+				LastMessage = DateTime.UtcNow,
+				Score = 0,
+				UsedFirstHourPoint = DateTime.UtcNow,
+				UsedHourPoints = 0
+			};
+			
+			await connection.InsertAsync(user);
+		}
+
+		user.SetConnection(connection);
+
+		return user;
+	}
+
 	public Player GetPlayer()
 	{
 		return ChatCraft.Instance.GetPlayer(Context.User);
@@ -911,6 +955,10 @@ public class InfoModule : CrierModuleBase
 		{  8 , ":eight:" },
 	};
 
+	public InfoModule(DatabaseAccess database) : base(database)
+	{
+	}
+
 	[Command("minesweeper")]
 	public async Task Title(int size = 10, float ratio = 0.15f)
 	{
@@ -1174,6 +1222,10 @@ public class InfoModule : CrierModuleBase
 [Group("servers"), Alias("s", "server")]
 public class Servers : CrierModuleBase
 {
+	public Servers(DatabaseAccess database) : base(database)
+	{
+	}
+
 	public enum Map
 	{
 		Town,
@@ -1308,6 +1360,10 @@ public class WhoIs : CrierModuleBase
 		"The real question is, who is {1}?",
 		"{1} asking who {0} is. Classic.",
 	};
+
+	public WhoIs(DatabaseAccess database) : base(database)
+	{
+	}
 
 	[Command(), Priority(-1)]
 	public async Task Other([Remainder]string name)

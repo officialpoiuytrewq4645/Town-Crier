@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using DiscordBot.Database;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -202,12 +203,24 @@ namespace DiscordBot.Modules.ChatCraft
 	[Group("town"), Alias("tc")]
 	public class TownCommandsCombat : CrierModuleBase
 	{
+		public TownCommandsCombat(DatabaseAccess database) : base(database)
+		{
+		}
+
 		[Group(), Alias("combat")]
 		public class CombatCommandsOptional : CrierModuleBase
 		{
+			public CombatCommandsOptional(DatabaseAccess database) : base(database)
+			{
+			}
+
 			[Group("attack")]
 			public class AttackCommands : CrierModuleBase
 			{
+				public AttackCommands(DatabaseAccess database) : base(database)
+				{
+				}
+
 				[Command()]
 				public async Task AttackUser([Hand]Slot hand, [InCombatWith, Enemy]Unit target)
 				{
@@ -331,6 +344,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group("combat")]
 		public class CombatCommands : CrierModuleBase
 		{
+			public CombatCommands(DatabaseAccess database) : base(database)
+			{
+			}
+
 			[Command("state"), Priority(1)]
 			public async Task State()
 			{

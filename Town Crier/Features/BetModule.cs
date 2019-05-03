@@ -8,12 +8,17 @@ using System;
 using DiscordBot.Modules.ChatCraft;
 
 using Microsoft.Extensions.DependencyInjection;
+using DiscordBot.Database;
 
 namespace DiscordBot
 {
 	[Group("bet")]
 	public class BetModule : CrierModuleBase
 	{
+		public BetModule(DatabaseAccess database) : base(database)
+		{
+		}
+
 		[Command, Alias("help")]
 		public async Task Help()
 		{

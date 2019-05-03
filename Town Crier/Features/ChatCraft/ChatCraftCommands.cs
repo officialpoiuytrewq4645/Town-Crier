@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Database;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +14,10 @@ namespace DiscordBot.Modules.ChatCraft
 	public class RelatedCommands : CrierModuleBase
 	{
 		static Random random = new Random();
+
+		public RelatedCommands(DatabaseAccess database) : base(database)
+		{
+		}
 
 		[Command("flip"), Alias("heads or tails", "flip a coin")]
 		public async Task FlipCoin()
@@ -104,6 +109,10 @@ namespace DiscordBot.Modules.ChatCraft
 	[Group("town"), Alias("tc")]
 	public class TownCommands : CrierModuleBase
 	{
+		public TownCommands(DatabaseAccess database) : base(database)
+		{
+		}
+
 		[Command(), Priority(-10000)]
 		public async Task Catch(string command)
 		{
@@ -134,6 +143,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group("getstarted"), Alias("help", "gettingstarted")]
 		public class Help : CrierModuleBase
 		{
+			public Help(DatabaseAccess database) : base(database)
+			{
+			}
+
 			[Command]
 			public async Task GetStarted()
 			{
@@ -238,6 +251,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group]
 		public class EquipCommands : CrierModuleBase
 		{
+			public EquipCommands(DatabaseAccess database) : base(database)
+			{
+			}
+
 			[Command, Priority(-3)]
 			public async Task GetSlot(Slot slot)
 			{
@@ -375,6 +392,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group("inventory"), Alias("items")]
 		public class InventoryCommands : CrierModuleBase
 		{
+			public InventoryCommands(DatabaseAccess database) : base(database)
+			{
+			}
+
 			[Command(), Alias("all")]
 			public async Task GetInventory()
 			{
@@ -431,6 +452,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group("recipes"), Alias("recipe", "task", "activity")]
 		public class RecipeCommandsOptional : CrierModuleBase
 		{
+			public RecipeCommandsOptional(DatabaseAccess database) : base(database)
+			{
+			}
+
 			[Command(), Priority(-3)]
 			public async Task Craft(int count, [Learnt]Recipe recipe)
 			{
@@ -526,6 +551,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group("recipe"), Alias("task", "activity")]
 		public class RecipeCommands : CrierModuleBase
 		{
+			public RecipeCommands(DatabaseAccess database) : base(database)
+			{
+			}
+
 			[Command("Read"), Alias("Look", "Lookat")]
 			public async Task Read([Learnt]Recipe recipe)
 			{
@@ -730,6 +759,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group("debug"), Alias("admin", "d"), RequireAdmin]
 		public class DebugCommands : CrierModuleBase
 		{
+			public DebugCommands(DatabaseAccess database) : base(database)
+			{
+			}
+
 			[Command("generalfix")]
 			public async Task JoinFix()
 			{
@@ -790,6 +823,10 @@ namespace DiscordBot.Modules.ChatCraft
 					new Metal("Platinum", 1.5f, 40),
 					new Metal("Mythril", 2f, 30)
 				};
+
+				public Fix(DatabaseAccess database) : base(database)
+				{
+				}
 
 				[Command("metal items")]
 				public async Task MetalItems(bool isReplacing = false)
@@ -951,6 +988,10 @@ namespace DiscordBot.Modules.ChatCraft
 			[Group("l")]
 			public class List : CrierModuleBase
 			{
+				public List(DatabaseAccess database) : base(database)
+				{
+				}
+
 				[Command("items")]
 				public async Task Items()
 				{
@@ -1037,6 +1078,10 @@ namespace DiscordBot.Modules.ChatCraft
 			[Group("a")]
 			public class Adding : CrierModuleBase
 			{
+				public Adding(DatabaseAccess database) : base(database)
+				{
+				}
+
 				[Command("Slot")]
 				public async Task Slot(string name, int side)
 				{

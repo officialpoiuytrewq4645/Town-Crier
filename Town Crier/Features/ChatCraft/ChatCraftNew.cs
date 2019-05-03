@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Discord.Rest;
+using DiscordBot.Database;
 
 namespace DiscordBot.Modules.ChatCraft
 {
@@ -81,8 +82,16 @@ namespace DiscordBot.Modules.ChatCraft
 	[Alias("D")]
 	public class ChatCraftConfig : CrierModuleBase
 	{
+		public ChatCraftConfig(DatabaseAccess database) : base(database)
+		{
+		}
+
 		public abstract class ConfigModule<T> : CrierModuleBase
 		{
+			public ConfigModule(DatabaseAccess database) : base(database)
+			{
+			}
+
 			public delegate bool TryParse<TType>(string input, out TType result);
 			
 			[Command("Add", RunMode = RunMode.Async)]
@@ -194,6 +203,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group("ItemSet")]
 		public class ItemSetModule : ConfigModule<ItemSet>
 		{
+			public ItemSetModule(DatabaseAccess database) : base(database)
+			{
+			}
+
 			async Task AsyncAdd(ItemSet set)
 			{
 				await AsyncAskList("Add an item.", 0, async name =>
@@ -332,6 +345,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group("ExploreSet")]
 		public class ExploreSetModule : ConfigModule<ExploreSet>
 		{
+			public ExploreSetModule(DatabaseAccess database) : base(database)
+			{
+			}
+
 			public override async Task Add()
 			{
 				ExploreSet exploreSet = new ExploreSet();
@@ -504,6 +521,10 @@ namespace DiscordBot.Modules.ChatCraft
 		[Group("Location")]
 		public class LocationModule : ConfigModule<Location>
 		{
+			public LocationModule(DatabaseAccess database) : base(database)
+			{
+			}
+
 			async Task AsyncAddConnections(Location location)
 			{
 				await AsyncAskList("Name the connections.", 1, async name =>
@@ -749,6 +770,10 @@ namespace DiscordBot.Modules.ChatCraft
 			}
 		};
 
+		public ChatCraftTravel(DatabaseAccess database) : base(database)
+		{
+		}
+
 		[Command("list")]
 		public async Task List()
 		{
@@ -945,6 +970,10 @@ namespace DiscordBot.Modules.ChatCraft
 	[Group("Coins"), Alias("Coin", "Gold", "Money", "Cash")]
 	public class ChatCraftCoins : CrierModuleBase
 	{
+		public ChatCraftCoins(DatabaseAccess database) : base(database)
+		{
+		}
+
 		[Command]
 		public async Task Coins()
 		{
@@ -1047,6 +1076,10 @@ namespace DiscordBot.Modules.ChatCraft
 				}
 			}
 		};
+
+		public ChatCraftParty(DatabaseAccess database) : base(database)
+		{
+		}
 
 		[Command]
 		public async Task Current()

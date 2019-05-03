@@ -15,6 +15,7 @@ using System.Timers;
 using Alta.WebApi.Models.DTOs.Responses;
 using Discord.WebSocket;
 using Alta.WebApi.Models;
+using TownCrier.Database;
 
 namespace TownCrier
 {
@@ -22,7 +23,7 @@ namespace TownCrier
 	public class AccountModule : InteractiveBase<SocketCommandContext>
 	{
 		public AltaAPI altaApI { get; set; }
-		public LiteDatabase Database { get; set; }
+		public LiteDatabase database { get; set; }
 
 		public class AccountDatabase
 		{
@@ -143,9 +144,9 @@ namespace TownCrier
 
 		[Command("who")]
 		[RequireUserPermission(GuildPermission.KickMembers)]
-		public async Task Who(string username)
+		public async Task Who([Remainder] SocketUser Username)
 		{
-			AccountInfo info = database.accounts.Values.FirstOrDefault(item => item.username == username);
+			var Townie = database.GetCollection<TownResident>("Users").FindById(Username.Id);
 
 			if (info != null)
 			{
@@ -174,7 +175,7 @@ namespace TownCrier
 
 
 		[Command("forceupdate")]
-		public async Task Update(IUser user)
+		public async Task Update(SocketUser user)
 		{
 			if (database.accounts.TryGetValue(user.Id, out AccountInfo info))
 			{
@@ -218,15 +219,22 @@ namespace TownCrier
 				await ReplyAsync(Context.User.Mention + ", " + "You have not linked to an Alta account! To link, visit the 'Account Settings' page in the launcher.");
 			}
 		}
-
 		[Command("verify")]
+		[RequireContext(ContextType.Guild)]
+		public async Task Verify([Remainder]string encoded)
+		{
+			await Context.Message.DeleteAsync();
+			await ReplyAsync("For security reasons, you can only use this command via DMs! Please send this command again via DMs.");
+		}
+		[Command("verify")] [RequireContext(ContextType.DM)]
 		public async Task Verify([Remainder]string encoded)
 		{
 			JwtSecurityToken token;
 			Claim userData;
 			Claim altaId;
 
-			await Context.Message.DeleteAsync();
+			var UserCollection = database.GetCollection<TownResident>("Users");
+			var user = UserCollection.FindById(Context.User.Id);
 
 			try
 			{
@@ -268,52 +276,48 @@ namespace TownCrier
 
 					if (isValid)
 					{
-						if (database.altaIdMap.TryGetValue(id, out ulong connected))
+						if (user.altaIdentifier == id)
 						{
-							if (connected == Context.User.Id)
-							{
-								await ReplyAsync(Context.User.Mention + ", " + "Already connected!");
+							await ReplyAsync(Context.User.Mention + ", " + "Already connected!");
+							return;
+						}
 
-								await UpdateAsync(database.accounts[connected], (SocketGuildUser)Context.User);
-								return;
-							}
+						AccountInfo old = database.accounts[database.altaIdMap[id]];
 
-							AccountInfo old = database.accounts[database.altaIdMap[id]];
+						SocketGuildUser oldUser = Context.Guild.GetUser(old.discordIdentifier);
 
-							SocketGuildUser oldUser = Context.Guild.GetUser(old.discordIdentifier);
-
-							await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Alta account from {oldUser.Mention}...");
+						await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Alta account from {oldUser.Mention}...");
 							
-							database.accounts.Remove(database.altaIdMap[id]);
-							database.expiryAccounts.Remove(old);
-						}
-
-						database.altaIdMap[id] = Context.User.Id;
-
-						AccountInfo account;
-
-						if (database.accounts.TryGetValue(Context.User.Id, out account))
-						{
-							await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Discord from {account.username}...");
-						}
-						else
-						{
-							account = new AccountInfo()
-							{
-								discordIdentifier = Context.User.Id
-							};
-
-							database.accounts.Add(account.discordIdentifier, account);
-						}
-
-						account.altaIdentifier = id;
-
-						await UpdateAsync(account, (SocketGuildUser)Context.User);
-
-						await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {account.username}!");
-						
-						isChanged = true;
+						database.accounts.Remove(database.altaIdMap[id]);
+						database.expiryAccounts.Remove(old);
 					}
+
+					database.altaIdMap[id] = Context.User.Id;
+
+					AccountInfo account;
+
+					if (database.accounts.TryGetValue(Context.User.Id, out account))
+					{
+						await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Discord from {account.username}...");
+					}
+					else
+					{
+						account = new AccountInfo()
+						{
+							discordIdentifier = Context.User.Id
+						};
+
+						database.accounts.Add(account.discordIdentifier, account);
+					}
+
+					account.altaIdentifier = id;
+
+					await UpdateAsync(account, (SocketGuildUser)Context.User);
+
+					await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {account.username}!");
+						
+					isChanged = true;
+					
 					else
 					{
 						await ReplyAsync(Context.User.Mention + ", " + "Invalid token! Try creating a new one!");

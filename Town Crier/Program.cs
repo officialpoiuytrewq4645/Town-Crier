@@ -48,7 +48,7 @@ namespace TownCrier
 				.AddSingleton(_client)
 				.AddSingleton(new CommandService(new CommandServiceConfig()
 				{
-					DefaultRunMode = RunMode.Async,
+					DefaultRunMode = RunMode.Async, // This ensures that a command that isn't "done" (Such as reaction menus) don't block the gateway and cause the bo to go offline.
 					CaseSensitiveCommands = false
 				})
 				)

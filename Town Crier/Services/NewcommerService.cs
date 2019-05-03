@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using LiteDB;
+using TownCrier.Database;
 
 namespace TownCrier.Services
 {
@@ -18,47 +20,68 @@ namespace TownCrier.Services
 		private readonly IConfiguration _config;
 		private readonly LiteDatabase _database;
 
-		public NewcommerService(DiscordSocketClient client)
+		public NewcommerService(DiscordSocketClient client,LiteDatabase database,IServiceProvider provider,IConfiguration configuration)
 		{
-			client.UserJoined += UserJoined;
-			client.UserLeft += AlertTeam;
+			_discord = client;
+			_provider = provider;
+			_database = database;
+			_config = configuration;
+
+			_discord.UserJoined += UserJoined;
+			_discord.UserLeft += AlertTeam;
 		}
 
-		static async Task UserJoined(SocketGuildUser user)
+		public async Task UserJoined(SocketGuildUser user)
 		{
-			if (logChannel == null)
+			// Locate TownGuild in the database
+			var guild = _database.GetCollection<TownGuild>("Guild").FindById(user.Guild.Id);
+			
+			// Create a variable that contains the SocketGuild associated with the TownGuild
+			var discordguild = _discord.GetGuild(guild.GuildId);
+
+			// TextChannel where Notifications go
+			var NotificationChannel = discordguild.GetTextChannel(guild.NotificationChannel);
+
+			// Send welcome message, parsing the welcome message string from the TownGuild property
+			if (guild.WelcomeMessage != "")
 			{
-				logChannel = user.Guild.GetChannel(334933825383563266) as SocketTextChannel;
+				var welcome = await NotificationChannel.SendMessageAsync(guild.ParseMessage(user, _discord));
+
+				await welcome.AddReactionAsync(Emojis.Wave);
 			}
 
-			if (gettingStartedChannel == null)
+			if (guild.MilestoneMessage!="" &&(discordguild.Users.Count % guild.MilestoneMarker) == 0)
 			{
-				gettingStartedChannel = (user.Guild.GetChannel(450499963999223829) as ITextChannel).Mention;
-			}
-
-			RestUserMessage welcome = await logChannel.SendMessageAsync($"A newcomer has arrived. Welcome {user.Mention}!\nCheck out {gettingStartedChannel} (includes download link!)");
-
-			await welcome.AddReactionAsync(Emojis.Wave);
-
-			Console.WriteLine("User Joined : " + user.Username + " . Member Count : " + logChannel.Guild.MemberCount);
-
-			if ((logChannel.Guild.MemberCount % 1000) == 0)
-			{
-				await logChannel.SendMessageAsync($"We've now hit {logChannel.Guild.MemberCount} members! Wooooo!");
+				await NotificationChannel.SendMessageAsync($"We've now hit {discordguild.Users.Count} members! Wooooo!");
 
 				await Task.Delay(1000 * 20);
 
-				await logChannel.SendMessageAsync($"Partaayyy!");
+				await NotificationChannel.SendMessageAsync($"Partaayyy!");
 			}
+
+			// Fetch the collection of TownResidents
+			var Residents = _database.GetCollection<TownResident>("Users");
+
+			// If there's no entry in the user database for this user, add one.
+			if (!Residents.Exists(x => x.UserId == user.Id)) Residents.Insert(new TownResident() { UserId = user.Id });
+
 		}
 
-		static async Task AlertTeam(IUser user)
+		public async Task AlertTeam(SocketGuildUser user)
 		{
-			IGuildUser guildUser = user as IGuildUser;
+			// Locate TownGuild in the database
+			var guild = _database.GetCollection<TownGuild>("Guild").FindById(user.Guild.Id);
 
-			IGuildChannel channel = await guildUser.Guild.GetChannelAsync(444348503569858560);
+			// Create a variable that contains the SocketGuild associated with the TownGuild
+			var discordguild = _discord.GetGuild(guild.GuildId);
 
-			await (channel as ISocketMessageChannel).SendMessageAsync("The user: " + user.Username + " left. They joined: " + guildUser.JoinedAt.ToString());
+			// TextChannel where Notifications go
+			var AdminChannel = discordguild.GetTextChannel(guild.AdminChannel);
+
+			// Fetch the user's TownResident entry
+			var Resident = _database.GetCollection<TownResident>("Users").FindById(user.Id);
+
+			await AdminChannel.SendMessageAsync("The user: " + user.Username + " left. They joined: " + Resident.InitialJoin.ToString("dd/MMM/yyyy hh:mm: tt"));
 		}
 	}
 }

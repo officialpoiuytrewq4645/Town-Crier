@@ -234,6 +234,7 @@
     <Compile Include="Features\OutOfOffice.cs" />
     <Compile Include="Features\PointCounter.cs" />
     <Compile Include="Features\ServerTeamAlert.cs" />
+    <Compile Include="Features\WhoAmIModule.cs" />
     <Compile Include="Features\WikiSearcher.cs" />
     <Compile Include="FileDatabase.cs" />
     <Compile Include="Features\AccountModule.cs" />

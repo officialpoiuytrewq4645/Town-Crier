@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{AB71221F-5B61-4AC7-AF2B-452DA9EC6F93}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DiscordBot</RootNamespace>
     <AssemblyName>DiscordBot</AssemblyName>
@@ -237,6 +237,7 @@
     <Compile Include="Features\ChatCraft\Unit.cs" />
     <Compile Include="Features\CommandsProcessor.cs" />
     <Compile Include="Features\DoYouCare.cs" />
+    <Compile Include="Features\MiniGames.cs" />
     <Compile Include="Features\NewcomerHandler.cs" />
     <Compile Include="Features\OutOfOffice.cs" />
     <Compile Include="Features\PointCounter.cs" />

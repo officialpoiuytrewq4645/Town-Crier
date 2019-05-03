@@ -138,9 +138,7 @@ namespace DiscordBot
 			{
 				string number = nameToLower.Substring(3, nameToLower.Length - 4);
 
-				ulong id;
-
-				if (ulong.TryParse(number, out id))
+				if (ulong.TryParse(number, out ulong id))
 				{
 					IUser user = Context.Guild.GetUserAsync(id).Result;
 
@@ -592,14 +590,12 @@ public class CrierModuleBase : InteractiveBase
 			await message.AddReactionAsync(emoji);
 		}
 
-		Task.Run(async () =>
-		{
-			Interactive.AddReactionCallback(message, response);
-
-			await Task.Delay(timespan);
-
-			Interactive.RemoveReactionCallback(message);
-		});
+		await Task.Run(async () =>
+		 {
+			 Interactive.AddReactionCallback(message, response);
+			 await Task.Delay(timespan);
+			 Interactive.RemoveReactionCallback(message);
+		 });
 	}
 
 	public Task DeleteCommand()

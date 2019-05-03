@@ -188,7 +188,7 @@ namespace ActivityRoles
 				activity.InitializeForGuild(guild);
 
 				//Not awaiting so they all go at once
-				activity.ApplyRole(guild);
+				await activity.ApplyRole(guild);
 			}
 		}
 
@@ -219,7 +219,7 @@ namespace ActivityRoles
 			foreach (ActivityDefinition activity in activities)
 			{
 				//Not awaiting so they all go at once
-				activity.RemoveRole(guild);
+				await activity.RemoveRole(guild);
 			}
 		}
 	}

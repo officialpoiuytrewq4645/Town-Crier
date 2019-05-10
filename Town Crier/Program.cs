@@ -54,10 +54,11 @@ namespace TownCrier
 				)
 				.AddSingleton<CommandHandlingService>()
 				// Logging
-				.AddLogging()
+				.AddLogging(x=>x.AddConsole())
 				.AddSingleton<LogService>()
 				// Extra
 				.AddSingleton(_config)
+				.AddSingleton<Timer_Service>()
 				.AddSingleton(new CommandCacheService(_client))
 				.AddSingleton(new InteractiveService(_client))
 				// Adds Database

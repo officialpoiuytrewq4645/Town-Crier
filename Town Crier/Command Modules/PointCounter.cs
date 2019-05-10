@@ -1,45 +1,44 @@
-﻿using Discord.WebSocket;
-using TownCrier.Modules.ChatCraft;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿//using Discord.WebSocket;
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Text;
+//using System.Threading.Tasks;
 
-namespace TownCrier.Features
-{
-	static class PointCounter
-	{
-		public static void Process(SocketUserMessage message)
-		{
-			Player player = ChatCraft.Instance.GetPlayer(message.Author);
+//namespace TownCrier.Features
+//{
+//	static class PointCounter
+//	{
+//		public static void Process(SocketUserMessage message)
+//		{
+//			Player player = ChatCraft.Instance.GetPlayer(message.Author);
 
-			DateTime now = DateTime.UtcNow;
+//			DateTime now = DateTime.UtcNow;
 
-			if ((now - player.lastMessage).TotalMinutes > 1)
-			{
-				if (player.usedHourPoints > 0)
-				{
-					if ((now - player.usedFirstHourPoint).TotalHours > 1)
-					{
-						player.usedHourPoints = 0;
-					}
-				}
+//			if ((now - player.lastMessage).TotalMinutes > 1)
+//			{
+//				if (player.usedHourPoints > 0)
+//				{
+//					if ((now - player.usedFirstHourPoint).TotalHours > 1)
+//					{
+//						player.usedHourPoints = 0;
+//					}
+//				}
 
-				if (player.usedHourPoints < 20)
-				{
-					if (player.usedHourPoints == 0)
-					{
-						player.usedFirstHourPoint = now;
-					}
+//				if (player.usedHourPoints < 20)
+//				{
+//					if (player.usedHourPoints == 0)
+//					{
+//						player.usedFirstHourPoint = now;
+//					}
 
-					player.usedHourPoints++;
+//					player.usedHourPoints++;
 
-					player.score += 10;
+//					player.score += 10;
 
-					player.lastMessage = now;
-				}
-			}
-		}
-	}
-}
+//					player.lastMessage = now;
+//				}
+//			}
+//		}
+//	}
+//}

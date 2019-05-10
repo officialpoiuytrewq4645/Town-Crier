@@ -17,16 +17,13 @@ namespace TownCrier.Services
 		private readonly ILogger _discordLogger;
 		private readonly ILogger _commandsLogger;
 
-		public LogService(DiscordSocketClient discord, CommandService commands, ILoggingBuilder loggingBuilder, ILoggerFactory loggerFactory)
+		public LogService(DiscordSocketClient discord, CommandService commands, ILoggerFactory loggerFactory)
 		{
 			_discord = discord;
 			_commands = commands;
 
 			_loggerFactory= loggerFactory;
-			_loggingBuilder = loggingBuilder;
 
-			_loggingBuilder.AddConsole();
-			
 			_discordLogger = _loggerFactory.CreateLogger("discord");
 			_commandsLogger = _loggerFactory.CreateLogger("commands");
 			

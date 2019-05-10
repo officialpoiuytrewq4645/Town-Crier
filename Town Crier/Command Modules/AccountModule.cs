@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using Discord.Addons.Interactive;
 using System.Linq;
 using System;
-using TownCrier.Modules.ChatCraft;
 using LiteDB;
 using Microsoft.Extensions.DependencyInjection;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,6 +15,7 @@ using Alta.WebApi.Models.DTOs.Responses;
 using Discord.WebSocket;
 using Alta.WebApi.Models;
 using TownCrier.Database;
+using TownCrier.Services;
 
 namespace TownCrier
 {
@@ -60,145 +60,50 @@ namespace TownCrier
 		static SocketRole supporterRole;
 		static SocketTextChannel supporterChannel;
 		static SocketTextChannel generalChannel;
-	
 
-		public async Task UpdateAsync(AccountInfo account, SocketGuildUser user)
-		{
-			try
-			{
-				UserInfo userInfo = await altaApI.ApiClient.UserClient.GetUserInfoAsync(account.altaIdentifier);
-				
-				MembershipStatusResponse result = await altaApI.ApiClient.UserClient.GetMembershipStatus(account.altaIdentifier);
+		// NOTE: Both of these commands will be tied to a global clock that will periodically update all accounts every 15~30 mins.
 
-				if (userInfo == null)
-				{
-					Console.WriteLine("Couldn't find userinfo for " + account.username);
-					return;
-				}
+		//[Command("update")]
+		//public async Task Update()
+		//{
+		//	if (database.accounts.TryGetValue(Context.User.Id, out AccountInfo info))
+		//	{
+		//		await UpdateAsync(info, (SocketGuildUser)Context.User);
 
-				if (result == null)
-				{
-					Console.WriteLine("Couldn't find membership status for " + account.username);
-					return;
-				}
-				
-				account.supporterExpiry = result.ExpiryTime ?? DateTime.MinValue;
-				account.isSupporter = result.IsMember;
-				account.username = userInfo.Username;
-
-				if (account.isSupporter)
-				{
-					database.expiryAccounts.Add(account);
-				}
-				
-				if (user == null)
-				{
-					user = guild.GetUser(account.discordIdentifier);
-				}
-
-				if (user == null)
-				{
-					Console.WriteLine("Couldn't find Discord user for " + account.username + " " + account.discordIdentifier);
-					return;
-				}
-
-				if (supporterRole == null)
-				{
-					supporterRole = guild.GetRole(547202953505800233);
-					supporterChannel = guild.GetTextChannel(547204432144891907);
-					generalChannel = guild.GetChannel(334933825383563266) as SocketTextChannel;
-				}
-				
-				if (account.isSupporter)
-				{
-					if (user.Roles == null || !user.Roles.Contains(supporterRole))
-					{
-						try
-						{
-							await user.AddRoleAsync(supporterRole);
-						}
-						catch (Exception e)
-						{
-							Console.WriteLine("Error adding role");
-							Console.WriteLine(user);
-							Console.WriteLine(supporterRole);
-						}
-
-						await supporterChannel.SendMessageAsync($"{user.Mention} joined. Thanks for the support!");
-						await generalChannel.SendMessageAsync($"{user.Mention} became a supporter! Thanks for the support!\nIf you'd like to find out more about supporting, visit https://townshiptale.com/supporter");
-					}
-				}
-				else
-				{
-					await user.RemoveRoleAsync(supporterRole);
-				}
-
-				isChanged = true;
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine("Error updating " + account.username);
-				Console.WriteLine(e.Message);
-			}
-		}
-
-		[Command("who")]
-		[RequireUserPermission(GuildPermission.KickMembers)]
-		public async Task Who([Remainder] SocketUser Username)
-		{
-			var Townie = database.GetCollection<TownResident>("Users").FindById(Username.Id);
-
-			if (info != null)
-			{
-				await ReplyAsync(Context.User.Mention+", "+ username + " is " + guild.GetUser(info.discordIdentifier)?.Username);
-			}
-			else
-			{
-				await ReplyAsync(Context.User.Mention + ","+"Couldn't find " + username);
-			}
-		}
-
-		[Command("update")]
-		public async Task Update()
-		{
-			if (database.accounts.TryGetValue(Context.User.Id, out AccountInfo info))
-			{
-				await UpdateAsync(info, (SocketGuildUser)Context.User);
-
-				await ReplyAsync(Context.User.Mention + ", " + $"Hey {info.username}, your account info has been updated!");
-			}
-			else
-			{
-				await ReplyAsync(Context.User.Mention + ", " + "You have not linked to an Alta account! To link, visit the 'Account Settings' page in the launcher.");
-			}
-		}
+		//		await ReplyAsync(Context.User.Mention + ", " + $"Hey {info.username}, your account info has been updated!");
+		//	}
+		//	else
+		//	{
+		//		await ReplyAsync(Context.User.Mention + ", " + "You have not linked to an Alta account! To link, visit the 'Account Settings' page in the launcher.");
+		//	}
+		//}
 
 
-		[Command("forceupdate")]
-		public async Task Update(SocketUser user)
-		{
-			if (database.accounts.TryGetValue(user.Id, out AccountInfo info))
-			{
-				await UpdateAsync(info, null);
+		//[Command("forceupdate")]
+		//public async Task Update(SocketUser user)
+		//{
+		//	if (database.accounts.TryGetValue(user.Id, out AccountInfo info))
+		//	{
+		//		await UpdateAsync(info, null);
 
-				await ReplyAsync(Context.User.Mention + ", " + $"{info.username}'s account info has been updated!");
-			}
-			else
-			{
-				await ReplyAsync(Context.User.Mention + ", " + user.Username + " have not linked to an Alta account!");
-			}
-		}
+		//		await ReplyAsync(Context.User.Mention + ", " + $"{info.username}'s account info has been updated!");
+		//	}
+		//	else
+		//	{
+		//		await ReplyAsync(Context.User.Mention + ", " + user.Username + " have not linked to an Alta account!");
+		//	}
+		//}
 
 
 		[Command("unlink")]
 		public async Task Unlink()
 		{
-			if (database.accounts.TryGetValue(Context.User.Id, out AccountInfo info))
-			{
-				database.accounts.Remove(Context.User.Id);
-				database.expiryAccounts.Remove(info);
-				database.altaIdMap.Remove(info.altaIdentifier);
+			var collection= database.GetCollection<TownResident>("Users");
+			var townie = collection.FindOne(x => x.UserId == Context.User.Id);
 
+			if (!townie.altaIdentifier.HasValue)
+			{
+				townie.Unlink();
 				await ReplyAsync(Context.User.Mention + ", " + "You are no longer linked to an Alta account!");
 			}
 			else
@@ -207,26 +112,31 @@ namespace TownCrier
 			}
 		}
 
-		[Command(), Alias("linked")]
+		[Command("IsLinked"), Alias("Linked")]
 		public async Task IsLinked()
 		{
-			if (database.accounts.TryGetValue(Context.User.Id, out AccountInfo info))
+			var UserCollection = database.GetCollection<TownResident>("Users");
+			if (!UserCollection.Exists(x => x.UserId != Context.User.Id)) UserCollection.Insert(new TownResident() { UserId = Context.User.Id });
+
+			var user = UserCollection.FindOne(x => x.UserId == Context.User.Id);
+
+			if (!user.altaIdentifier.HasValue)
 			{
-				await ReplyAsync(Context.User.Mention+", "+ $"Hey {info.username}, your account is linked!");
+				await ReplyAsync(Context.User.Mention+", "+ $"Your account is currently linkedto "+user.AltaUsername+"!");
 			}
 			else
 			{
 				await ReplyAsync(Context.User.Mention + ", " + "You have not linked to an Alta account! To link, visit the 'Account Settings' page in the launcher.");
 			}
 		}
-		[Command("verify")]
+		[Command("Verify")]
 		[RequireContext(ContextType.Guild)]
-		public async Task Verify([Remainder]string encoded)
+		public async Task Verifywrong([Remainder]string encoded)
 		{
 			await Context.Message.DeleteAsync();
 			await ReplyAsync("For security reasons, you can only use this command via DMs! Please send this command again via DMs.");
 		}
-		[Command("verify")] [RequireContext(ContextType.DM)]
+		[Command("Verify")] [RequireContext(ContextType.DM)]
 		public async Task Verify([Remainder]string encoded)
 		{
 			JwtSecurityToken token;
@@ -234,7 +144,10 @@ namespace TownCrier
 			Claim altaId;
 
 			var UserCollection = database.GetCollection<TownResident>("Users");
-			var user = UserCollection.FindById(Context.User.Id);
+			if (!UserCollection.Exists(x => x.UserId != Context.User.Id)) UserCollection.Insert(new TownResident() { UserId = Context.User.Id });
+
+			
+			var user = UserCollection.FindOne(x=>x.UserId==Context.User.Id);
 
 			try
 			{
@@ -281,43 +194,31 @@ namespace TownCrier
 							await ReplyAsync(Context.User.Mention + ", " + "Already connected!");
 							return;
 						}
-
-						AccountInfo old = database.accounts[database.altaIdMap[id]];
-
-						SocketGuildUser oldUser = Context.Guild.GetUser(old.discordIdentifier);
-
-						await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Alta account from {oldUser.Mention}...");
-							
-						database.accounts.Remove(database.altaIdMap[id]);
-						database.expiryAccounts.Remove(old);
-					}
-
-					database.altaIdMap[id] = Context.User.Id;
-
-					AccountInfo account;
-
-					if (database.accounts.TryGetValue(Context.User.Id, out account))
-					{
-						await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Discord from {account.username}...");
-					}
-					else
-					{
-						account = new AccountInfo()
+						if(user.altaIdentifier.HasValue)
 						{
-							discordIdentifier = Context.User.Id
-						};
+							user.altaIdentifier = null;
+							await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Discord from {user.AltaUsername}...");
+						}
 
-						database.accounts.Add(account.discordIdentifier, account);
+						if (UserCollection.Exists(x => x.altaIdentifier == id&&x.UserId!=Context.User.Id))
+						{
+							var oldUsers = UserCollection.Find(x => x.altaIdentifier == id && x.UserId != Context.User.Id);
+
+							foreach (var x in oldUsers)
+							{
+								var olddiscorduser = Context.Client.GetUser(x.UserId);
+
+								await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Alta account from {olddiscorduser.Mention}...");
+
+								x.Unlink();
+							}
+						}
+
+						user.altaIdentifier = id;
+						user.AltaUsername = altaApI.ApiClient.UserClient.GetUserInfoAsync(id).GetAwaiter().GetResult().Username;
+
+						await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaUsername}!");
 					}
-
-					account.altaIdentifier = id;
-
-					await UpdateAsync(account, (SocketGuildUser)Context.User);
-
-					await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {account.username}!");
-						
-					isChanged = true;
-					
 					else
 					{
 						await ReplyAsync(Context.User.Mention + ", " + "Invalid token! Try creating a new one!");

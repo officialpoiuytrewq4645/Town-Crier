@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using TownCrier.Modules.ChatCraft;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,7 +19,7 @@ namespace TownCrier.Features
 
 					IUserMessage response = await text.SendMessageAsync(message.Author.Mention + " in " + channel.Mention + ": " + message.Content);
 
-					await response.AddReactionAsync(Emojis.Tick);
+					await response.AddReactionAsync(new Emoji("✔"));
 				}
 			}
 		}

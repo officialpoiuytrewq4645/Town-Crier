@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
-using TownCrier.Modules.ChatCraft;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,7 +46,7 @@ namespace TownCrier.Services
 			{
 				var welcome = await NotificationChannel.SendMessageAsync(guild.ParseMessage(user, _discord));
 
-				await welcome.AddReactionAsync(Emojis.Wave);
+				await welcome.AddReactionAsync(new Emoji("👋"));
 			}
 
 			if (guild.MilestoneMessage!="" &&(discordguild.Users.Count % guild.MilestoneMarker) == 0)

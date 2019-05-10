@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LiteDB;
-using TownCrier.Modules.ChatCraft;
+using Alta.WebApi.Models;
 
 namespace TownCrier.Database
 {
@@ -24,10 +24,10 @@ namespace TownCrier.Database
 		/// <summary>
 		/// The user's current location
 		/// </summary>
-		public Location currentLocation { get; set; }
+		//public Location currentLocation { get; set; }
 
-		public List<Location> locations { get; set; } = new List<Location>();
-		public List<Recipe> recipes { get; set; } = new List<Recipe>();
+		//public List<Location> locations { get; set; } = new List<Location>();
+		//public List<Recipe> recipes { get; set; } = new List<Recipe>();
 
 		/// <summary>
 		/// Whether or not the user is an admin on this Guild's itteration of ChatCraft
@@ -72,15 +72,32 @@ namespace TownCrier.Database
 		/// <summary>
 		/// Alta ID
 		/// </summary>
-		public int altaIdentifier { get; private set; }
+		public int? altaIdentifier { get; set; }
 		/// <summary>
 		/// Date of Expiration of their supporter status
 		/// </summary>
-		public DateTime supporterExpiry { get; private set; }
+		public DateTime? supporterExpiry { get; set; }
 		/// <summary>
 		/// Returns wether or not the user is currently a supporter.
 		/// </summary>
-		public bool isSupporter { get; private set; }
+		public bool isSupporter { get; set; }
+		/// <summary>
+		/// Returns the Alta username tied to this account (Updates evert 15 minutes)
+		/// </summary>
+		public string AltaUsername { get; set; }
+
+		public void UpdateAltaCredentials(UserInfo info)
+		{
+			altaIdentifier = info.Identifier;
+			AltaUsername = info.Username;
+		}
+		public void Unlink()
+		{
+			altaIdentifier = null;
+			supporterExpiry = null;
+			isSupporter = false;
+			AltaUsername = null;
+		}
 		#endregion
 	}
 }

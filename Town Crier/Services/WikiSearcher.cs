@@ -8,8 +8,10 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using TownCrier.Database;
+using TownCrier.Services;
 
-namespace TownCrier.Features.Wiki
+namespace TownCrier.Services
 {
 	class ApiResponse
 	{
@@ -54,21 +56,50 @@ namespace TownCrier.Features.Wiki
 		}
 	}
 
-	static class WikiSearcher
+	public class WikiSearcher
 	{
 		const string WikiStart = "{";
 		const string WikiEnd = "}";
 
-		public static void Process(SocketUserMessage message)
+		DiscordSocketClient discord;
+		TownDatabase database;
+
+		public WikiSearcher(DiscordSocketClient discord, TownDatabase database)
 		{
-			if (message.Content.Contains(WikiStart) && message.Content.Contains(WikiEnd))
-			{
-				Task.Run(() => ShowWiki(message));
-			}
+			this.database = database;
+			this.discord = discord;
+
+			discord.MessageReceived += Search;
 		}
 
-		static async void ShowWiki(SocketUserMessage message)
+		async Task Search(SocketMessage message)
 		{
+			ITextChannel channel = message.Channel as ITextChannel;
+
+			if (channel == null)
+			{
+				return;
+			}
+
+			TownGuild guild = database.GetGuild(channel.Guild);
+
+			if (guild == null)
+			{
+				return;
+			}
+
+			await ShowWiki(message, guild);
+		}
+
+		public async Task ShowWiki(SocketMessage message, TownGuild guild)
+		{
+			string url = guild.WikiUrl;
+
+			if (url == null)
+			{
+				return;
+			}
+
 			try
 			{
 				List<string> items = GetWikiItems(message);
@@ -81,12 +112,12 @@ namespace TownCrier.Features.Wiki
 				var builder = new EmbedBuilder()
 				.WithColor(new Color(0xC9881E))
 				.WithTimestamp(DateTime.UtcNow)
-				.WithThumbnailUrl("https://d1u5p3l4wpay3k.cloudfront.net/atownshiptale_gamepedia_en/9/9e/WikiOnly.png")
+				.WithThumbnailUrl(guild.WikiIcon)
 				.WithAuthor(author =>
 				{
 					author
-					.WithName("A Township Tale Wiki")
-					.WithUrl("https://townshiptale.gamepedia.com");
+					.WithName(guild.WikiName)
+					.WithUrl(url);
 				});
 
 				if (items.Count > 1)
@@ -97,7 +128,7 @@ namespace TownCrier.Features.Wiki
 
 				foreach (string item in items)
 				{
-					await GetWikiDescription(item, builder);
+					await GetWikiDescription(url, item, builder);
 				};
 
 				if (items.Count > 1)
@@ -118,7 +149,7 @@ namespace TownCrier.Features.Wiki
 			}
 		}
 
-		static List<string> GetWikiItems(SocketUserMessage message)
+		List<string> GetWikiItems(SocketMessage message)
 		{
 			HashSet<string> lowerCase = new HashSet<string>();
 			List<string> result = new List<string>();
@@ -169,7 +200,7 @@ namespace TownCrier.Features.Wiki
 			return result;
 		}
 
-		static async Task GetWikiDescription(string item, EmbedBuilder builder, bool isFixing = true)
+		async Task GetWikiDescription(string url, string item, EmbedBuilder builder, bool isFixing = true)
 		{
 			string[] split = item.Split('#');
 
@@ -181,7 +212,7 @@ namespace TownCrier.Features.Wiki
 
 				if (isFixing)
 				{
-					HttpResponseMessage apiSearch = await httpClient.GetAsync("https://townshiptale.gamepedia.com/api.php?action=opensearch&profile=fuzzy&redirects=resolve&search=" + item);
+					HttpResponseMessage apiSearch = await httpClient.GetAsync(url + "/api.php?action=opensearch&profile=fuzzy&redirects=resolve&search=" + item);
 
 					//Format of result is really weird (array of mismatched types).
 					//Adding in square brackets to make first item a string array (rather than just string)
@@ -195,9 +226,9 @@ namespace TownCrier.Features.Wiki
 					{
 						description = "Page not found";
 
-						string url = "https://townshiptale.gamepedia.com/" + item.Replace(" ", "_");
+						string pageUrl = url + "/" + item.Replace(" ", "_");
 
-						description += $"\n[Click here to create it!]({url})";
+						description += $"\n[Click here to create it!]({pageUrl})";
 					}
 					else
 					{
@@ -227,13 +258,13 @@ namespace TownCrier.Features.Wiki
 					{
 						if (!isFixing)
 						{
-							await GetWikiDescription(item, builder, true);
+							await GetWikiDescription(url, item, builder, true);
 							return;
 						}
 					}
 					else
 					{
-						string url = "https://townshiptale.gamepedia.com/" + item.Replace(" ", "_");
+						string pageUrl = url + "/" + item.Replace(" ", "_");
 
 						int startSearch = 0;
 
@@ -331,7 +362,7 @@ namespace TownCrier.Features.Wiki
 			};
 		}
 
-		static void RemoveHtml(ref string description)
+		void RemoveHtml(ref string description)
 		{
 			int index = 0;
 

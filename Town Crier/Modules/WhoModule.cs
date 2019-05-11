@@ -5,7 +5,7 @@ using System.Linq;
 using System;
 using DiscordBot.Modules.ChatCraft;
 
-namespace DiscordBot.Features
+namespace DiscordBot.Modules
 {
 	[Group("who")]
 	public class WhoModule : CrierModuleBase

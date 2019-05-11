@@ -21,7 +21,7 @@ namespace BugReporter
 		DiscordSocketClient client;
 
 		//Kudos to Sol's mate
-		private async Task OnReactAddedAsync(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
+		 async Task OnReactAddedAsync(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
 		{
 			if (!reaction.User.IsSpecified || !JiraReporter.Settings.CheckAllowed(reaction.User.Value as SocketUser))
 			{

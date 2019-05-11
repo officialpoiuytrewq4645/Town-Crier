@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TownCrier.Database;
+using TownCrier.Services;
 
 namespace TownCrier
 {
@@ -112,35 +113,33 @@ namespace TownCrier
 		}
 	}
 
-	public class ActivityRoleManager
+	public class ActivityRoleService
 	{
-		public bool IsEnabled { get; private set; }
+		public bool IsEnabled { get;  set; }
 
-		private readonly DiscordSocketClient _client;
-		private readonly CommandService _command;
-		private readonly IServiceProvider _provider;
-		private readonly LiteDatabase _database;
-		private readonly IConfiguration _config;
+		 readonly DiscordSocketClient client;
+		 readonly IServiceProvider provider;
+		 readonly TownDatabase database;
 
 		List<ActivityDefinition> activities = new List<ActivityDefinition>();
 		List<SocketGuild> guilds = new List<SocketGuild>();
 
-		public ActivityRoleManager(IServiceProvider provider, DiscordSocketClient client, LiteDatabase database)
+		public ActivityRoleService(IServiceProvider provider, DiscordSocketClient client, TownDatabase database)
 		{
-			_provider = provider;
-			_client = client;
-			_database = database;
+			this.provider = provider;
+			this.client = client;
+			this.database = database;
 
-			_client.GuildMemberUpdated += _client_UserUpdated;
+			this.client.GuildMemberUpdated += UserUpdated;
 		}
 
-		private async Task _client_UserUpdated(SocketGuildUser OldUser, SocketGuildUser NewUser)
+		 async Task UserUpdated(SocketGuildUser OldUser, SocketGuildUser NewUser)
 		{
 			// If both activities are the same (in type & message), return
 			if (OldUser.Activity == NewUser.Activity) return;
 
 			// Fetch the guild from the Database
-			var guild = _database.GetCollection<TownGuild>("Guilds").FindById(NewUser.Guild.Id);
+			var guild = database.GetGuild(NewUser.Guild);
 
 			// Pull all roles tied to that particular activity type
 			foreach (var x in guild.GivableRoles.Where(x => x.ActivityType == NewUser.Activity.Type))
@@ -160,7 +159,7 @@ namespace TownCrier
 			}
 		}
 
-		private bool RegexValidate(string activity, string regex)
+		bool RegexValidate(string activity, string regex)
 		{
 			return new Regex(regex).IsMatch(activity);
 		}

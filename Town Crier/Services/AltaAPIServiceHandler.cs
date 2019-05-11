@@ -14,37 +14,40 @@ namespace TownCrier.Services
 	{
 		const int Timeout = 40;
 
-		public IHighLevelApiClient ApiClient { get; private set; }
-		private LiteDatabase _database;
-		private IConfiguration _config;
-		private readonly Timer_Service _timer;
+		public IHighLevelApiClient ApiClient { get; set; }
+
+		TownDatabase database;
+		IConfiguration config;
+		readonly TimerService timer;
 
 		SHA512 sha512 = new SHA512Managed();
 
-		public AltaAPI(LiteDatabase liteDatabase, IConfiguration configuration, Timer_Service timer)
+		public AltaAPI(TownDatabase database, IConfiguration config, TimerService timer)
 		{
-			_database = liteDatabase;
-			_config = configuration;
-			_timer = timer;
+			this.database = database;
+			this.config = config;
+			this.timer = timer;
 
 			StartWithEndpoint(HighLevelApiClientFactory.ProductionEndpoint);
 
-			_timer.OnClockInterval += _timer_OnClockInterval;
+			//No need to update username/identifier on interval. Needs to be changed to update supporter status, only for those who it's passed expiry for
+			//this.timer.OnClockInterval += _timer_OnClockInterval;
 		}
 
-		private async void _timer_OnClockInterval(object sender, IServiceProvider e)
-		{
-			var col = _database.GetCollection<TownResident>("Users");
-			var users = col.FindAll();
+		//async void _timer_OnClockInterval(object sender, IServiceProvider e)
+		//{
+		//	var col = database.Users;
+		//	var users = col.FindAll();
 
-			foreach(var x in users.Where(x=>x.altaIdentifier.HasValue))
-			{
-				var altauser = await ApiClient.UserClient.GetUserInfoAsync(x.altaIdentifier.Value);
-				
-				x.UpdateAltaCredentials(altauser);
-				col.Update(x);
-			}
-		}
+		//	foreach (var x in users.Where(x => x.AltaInfo != null && x.AltaInfo.Identifier != 0))
+		//	{
+		//		var altauser = await ApiClient.UserClient.GetUserInfoAsync(x.AltaInfo.Identifier);
+
+		//		x.AltaInfo.UpdateAltaCredentials(altauser);
+
+		//		col.Update(x);
+		//	}
+		//}
 
 		public void StartWithEndpoint(string endpoint)
 		{
@@ -63,8 +66,6 @@ namespace TownCrier.Services
 		{
 			//HighLevelApiClientFactory.SetLogging(new AltaLoggerFactory());
 		}
-
-
 
 		public void StartOffline(LoginCredentials credentials)
 		{

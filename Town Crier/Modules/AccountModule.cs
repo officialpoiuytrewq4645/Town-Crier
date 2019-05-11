@@ -1,19 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using Discord.Addons.Interactive;
 using Discord.Commands;
-using Discord;
-using System.Collections.Generic;
-using Discord.Addons.Interactive;
-using System.Linq;
-using System;
-using LiteDB;
-using Microsoft.Extensions.DependencyInjection;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Newtonsoft.Json;
-using System.Timers;
-using Alta.WebApi.Models.DTOs.Responses;
 using Discord.WebSocket;
-using Alta.WebApi.Models;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using TownCrier.Database;
 using TownCrier.Services;
 
@@ -22,8 +16,8 @@ namespace TownCrier
 	[Group("account")]
 	public class AccountModule : InteractiveBase<SocketCommandContext>
 	{
-		public AltaAPI altaApI { get; set; }
-		public LiteDatabase database { get; set; }
+		public AltaAPI AltaApi { get; set; }
+		public TownDatabase Database { get; set; }
 
 		public class AccountDatabase
 		{
@@ -98,12 +92,12 @@ namespace TownCrier
 		[Command("unlink")]
 		public async Task Unlink()
 		{
-			var collection= database.GetCollection<TownResident>("Users");
-			var townie = collection.FindOne(x => x.UserId == Context.User.Id);
+			var user = Database.GetUser(Context.User);
 
-			if (!townie.altaIdentifier.HasValue)
+			if (user.AltaInfo != null && user.AltaInfo.Identifier != 0)
 			{
-				townie.Unlink();
+				user.AltaInfo.Unlink();
+
 				await ReplyAsync(Context.User.Mention + ", " + "You are no longer linked to an Alta account!");
 			}
 			else
@@ -115,39 +109,26 @@ namespace TownCrier
 		[Command("IsLinked"), Alias("Linked")]
 		public async Task IsLinked()
 		{
-			var UserCollection = database.GetCollection<TownResident>("Users");
-			if (!UserCollection.Exists(x => x.UserId != Context.User.Id)) UserCollection.Insert(new TownResident() { UserId = Context.User.Id });
+			TownUser user = Database.GetUser(Context.User);
 
-			var user = UserCollection.FindOne(x => x.UserId == Context.User.Id);
-
-			if (!user.altaIdentifier.HasValue)
-			{
-				await ReplyAsync(Context.User.Mention+", "+ $"Your account is currently linkedto "+user.AltaUsername+"!");
-			}
-			else
+			if (user.AltaInfo == null || user.AltaInfo.Identifier == 0)
 			{
 				await ReplyAsync(Context.User.Mention + ", " + "You have not linked to an Alta account! To link, visit the 'Account Settings' page in the launcher.");
 			}
+			else
+			{
+				await ReplyAsync(Context.User.Mention + ", " + $"Your account is currently linkedto " + user.AltaInfo.Username + "!");
+			}
 		}
+		
 		[Command("Verify")]
-		[RequireContext(ContextType.Guild)]
-		public async Task Verifywrong([Remainder]string encoded)
-		{
-			await Context.Message.DeleteAsync();
-			await ReplyAsync("For security reasons, you can only use this command via DMs! Please send this command again via DMs.");
-		}
-		[Command("Verify")] [RequireContext(ContextType.DM)]
 		public async Task Verify([Remainder]string encoded)
 		{
 			JwtSecurityToken token;
 			Claim userData;
 			Claim altaId;
 
-			var UserCollection = database.GetCollection<TownResident>("Users");
-			if (!UserCollection.Exists(x => x.UserId != Context.User.Id)) UserCollection.Insert(new TownResident() { UserId = Context.User.Id });
-
-			
-			var user = UserCollection.FindOne(x=>x.UserId==Context.User.Id);
+			TownUser user = Database.GetUser(Context.User);
 
 			try
 			{
@@ -185,24 +166,31 @@ namespace TownCrier
 
 					int id = int.Parse(altaId.Value);
 
-					bool isValid = await altaApI.ApiClient.ServicesClient.IsValidShortLivedIdentityTokenAsync(token);
+					bool isValid = await AltaApi.ApiClient.ServicesClient.IsValidShortLivedIdentityTokenAsync(token);
 
 					if (isValid)
 					{
-						if (user.altaIdentifier == id)
+						if (user.AltaInfo == null)
+						{
+							user.AltaInfo = new UserAltaInfo();
+						}
+
+						if (user.AltaInfo.Identifier == id)
 						{
 							await ReplyAsync(Context.User.Mention + ", " + "Already connected!");
 							return;
 						}
-						if(user.altaIdentifier.HasValue)
+
+						if (user.AltaInfo.Identifier != 0)
 						{
-							user.altaIdentifier = null;
-							await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Discord from {user.AltaUsername}...");
+							await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Discord from {user.AltaInfo.Username}...");
+
+							user.AltaInfo.Unlink();
 						}
 
-						if (UserCollection.Exists(x => x.altaIdentifier == id&&x.UserId!=Context.User.Id))
+						if (Database.Users.Exists(x => x.AltaInfo.Identifier != 0 && x.AltaInfo.Identifier == id && x.UserId != Context.User.Id))
 						{
-							var oldUsers = UserCollection.Find(x => x.altaIdentifier == id && x.UserId != Context.User.Id);
+							var oldUsers = Database.Users.Find(x => x.AltaInfo.Identifier == id && x.UserId != Context.User.Id);
 
 							foreach (var x in oldUsers)
 							{
@@ -210,14 +198,14 @@ namespace TownCrier
 
 								await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Alta account from {olddiscorduser.Mention}...");
 
-								x.Unlink();
+								x.AltaInfo.Unlink();
 							}
 						}
 
-						user.altaIdentifier = id;
-						user.AltaUsername = altaApI.ApiClient.UserClient.GetUserInfoAsync(id).GetAwaiter().GetResult().Username;
+						user.AltaInfo.Identifier = id;
+						user.AltaInfo.Username = AltaApi.ApiClient.UserClient.GetUserInfoAsync(id).GetAwaiter().GetResult().Username;
 
-						await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaUsername}!");
+						await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaInfo.Username}!");
 					}
 					else
 					{

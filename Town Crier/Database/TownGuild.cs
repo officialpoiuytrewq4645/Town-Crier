@@ -16,6 +16,7 @@ namespace TownCrier.Database
 		/// </summary>
 		[BsonId]
 		public ulong GuildId { get; set; }
+
 		/// <summary>
 		/// Guild's Prefix
 		/// </summary>
@@ -25,6 +26,11 @@ namespace TownCrier.Database
 		/// These roles are auto-assigned to users based on their activity.
 		/// </summary>
 		public List<GivableRole> GivableRoles { get; set; } = new List<GivableRole>();
+
+		/// <summary>
+		/// These channels are pinged when the role is mentioned
+		/// </summary>
+		public List<CrossAlert> CrossAlerts { get; set; } = new List<CrossAlert>();
 
 		/// <summary>
 		/// This role is assinged to Alta supporters.
@@ -41,10 +47,11 @@ namespace TownCrier.Database
 		/// Channel assigned for public-level notifications.
 		/// </summary>
 		public ulong NotificationChannel { get; set; } = 0;
+
 		/// <summary>
-		/// Channel assigned for Admin-Level notifications
+		/// Channel assigned for leaving notifications
 		/// </summary>
-		public ulong AdminChannel { get; set; } = 0;
+		public ulong LeaverChannel { get; set; } = 0;
 
 		/// <summary>
 		/// A dictionary with some server settings:
@@ -55,6 +62,7 @@ namespace TownCrier.Database
 		/// </list>
 		/// </summary>
 		public Dictionary<string, bool> Settings { get; set; } = new Dictionary<string, bool>();
+		
 		/// <summary>
 		/// Message to be displayed when a user joins.
 		/// <list type="bullet">
@@ -85,17 +93,28 @@ namespace TownCrier.Database
 		/// </summary>
 		public int MilestoneMarker { get; set; } = 1000;
 
-		public string ParseMessage(SocketGuildUser user,DiscordSocketClient client)
+		public string WikiName { get; set; } //A Township Tale Wiki
+		public string WikiUrl { get; set; } //https://townshiptale.gamepedia.com
+		public string WikiIcon { get; set; } //https://d1u5p3l4wpay3k.cloudfront.net/atownshiptale_gamepedia_en/9/9e/WikiOnly.png
+
+		public string ParseMessage(SocketGuildUser user, DiscordSocketClient client)
 		{
 			string returnstring = WelcomeMessage.Replace("{user}", user.Mention).Replace("{server}", client.GetGuild(GuildId).Name).Replace("{server:count}", client.GetGuild(GuildId).Users.Count.ToString());
 			returnstring = AdminRole!=null ? returnstring.Replace("{admin}", AdminRole.Mention) : returnstring;
 			return returnstring;
 		}
 	}
+
 	public class GivableRole
 	{
 		public ActivityType ActivityType { get; set; }
 		public string ActivityName { get; set; }
 		public SocketRole AssociatedRole { get; set; }
+	}
+
+	public class CrossAlert
+	{
+		public ulong Channel { get; set; }
+		public SocketRole Role { get; set; }
 	}
 }

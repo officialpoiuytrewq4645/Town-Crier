@@ -7,10 +7,21 @@ using System.Threading.Tasks;
 
 namespace TownCrier.Features
 {
-	static class OutOfOffice
+	public class OutOfOffice
 	{
-		public static async Task Process(SocketUserMessage message)
+		DiscordSocketClient discord;
+
+		public OutOfOffice(DiscordSocketClient discord)
 		{
+			this.discord = discord;
+
+			discord.MessageReceived += Process;
+		}
+
+		async Task Process(SocketMessage message)
+		{
+			//TODO: Move some logic here into a standardized time based response system?
+
 			DateTime now = DateTime.Now;
 
 			var channel = message.Channel as ITextChannel;

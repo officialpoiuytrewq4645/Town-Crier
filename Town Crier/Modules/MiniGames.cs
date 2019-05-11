@@ -1,78 +1,68 @@
 ﻿using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
-using DiscordBot.Modules.ChatCraft;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-namespace DiscordBot.Features
+
+namespace DiscordBot.Modules
 {
-	public class LocalInteractiveBase : InteractiveBase
-	{
-		public Player GetPlayer()
-		{
-			return ChatCraft.Instance.GetPlayer(Context.User);
-		}
+	//public class LocalInteractiveBase : InteractiveBase<SocketCommandContext>
+	//{
+	//	public async Task<IUserMessage> ReplyMentionAsync(string message)
+	//	{
+	//		return await ReplyAsync($"{Context.User.Mention} - {message}");
+	//	}
 
-		public static Player GetPlayer(IUser user)
-		{
-			return ChatCraft.Instance.GetPlayer(user);
-		}
+	//	public async Task<IUserMessage> ReplyMentionBlockAsync(string message)
+	//	{
+	//		return await ReplyAsync($"{Context.User.Mention}\n{message}");
+	//	}
 
-		public async Task<IUserMessage> ReplyMentionAsync(string message)
-		{
-			return await ReplyAsync($"{Context.User.Mention} - {message}");
-		}
+	//	public async Task EmojiOption(IUserMessage message, EmojiResponse response, TimeSpan timespan, params Emoji[] emojis)
+	//	{
+	//		foreach (Emoji emoji in emojis)
+	//		{
+	//			await message.AddReactionAsync(emoji);
+	//		}
 
-		public async Task<IUserMessage> ReplyMentionBlockAsync(string message)
-		{
-			return await ReplyAsync($"{Context.User.Mention}\n{message}");
-		}
+	//		await Task.Run(async () =>
+	//		{
+	//			Interactive.AddReactionCallback(message, response);
+	//			await Task.Delay(timespan);
+	//			Interactive.RemoveReactionCallback(message);
+	//		});
+	//	}
 
-		public async Task EmojiOption(IUserMessage message, EmojiResponse response, TimeSpan timespan, params Emoji[] emojis)
-		{
-			foreach (Emoji emoji in emojis)
-			{
-				await message.AddReactionAsync(emoji);
-			}
+	//	public Task DeleteCommand()
+	//	{
+	//		return Context.Message.DeleteAsync();
+	//	}
 
-			await Task.Run(async () =>
-			{
-				Interactive.AddReactionCallback(message, response);
-				await Task.Delay(timespan);
-				Interactive.RemoveReactionCallback(message);
-			});
-		}
+	//	public static string ShowCommands(string prefix, List<string> commands, List<string> descriptions)
+	//	{
+	//		string message = "";
 
-		public Task DeleteCommand()
-		{
-			return Context.Message.DeleteAsync();
-		}
+	//		for (int i = 0; i < descriptions.Count; i++)
+	//		{
+	//			message += $"**{descriptions[i]}**\n";
 
-		public static string ShowCommands(string prefix, List<string> commands, List<string> descriptions)
-		{
-			string message = "";
+	//			commands[i] = commands[i].Replace("[", "*[");
+	//			commands[i] = commands[i].Replace("]", "]*");
 
-			for (int i = 0; i < descriptions.Count; i++)
-			{
-				message += $"**{descriptions[i]}**\n";
+	//			message += $"{prefix}{commands[i]}\n\n";
+	//		}
 
-				commands[i] = commands[i].Replace("[", "*[");
-				commands[i] = commands[i].Replace("]", "]*");
+	//		commands.Clear();
+	//		descriptions.Clear();
 
-				message += $"{prefix}{commands[i]}\n\n";
-			}
+	//		return message;
+	//	}
+	//}
 
-			commands.Clear();
-			descriptions.Clear();
-
-			return message;
-		}
-	}
-
-	public class MiniGames : LocalInteractiveBase
+	public class MiniGames : InteractiveBase<SocketCommandContext>
 	{
 		string GetString(string[] emojis, int[] progresses)
 		{

@@ -1,17 +1,16 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
-using Discord.Commands;
-using Discord.Addons.Interactive;
+﻿using Discord;
 using Discord.Addons.CommandCache;
+using Discord.Addons.Interactive;
+using Discord.Commands;
+using Discord.WebSocket;
+using LiteDB;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using LiteDB;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 using TownCrier.Services;
-using System.Reflection;
 
 namespace TownCrier
 {
@@ -21,8 +20,8 @@ namespace TownCrier
 		static void Main(string[] args)
 			=> new Program().MainAsync().GetAwaiter().GetResult();
 
-		private DiscordSocketClient _client;
-		private IConfiguration _config;
+		DiscordSocketClient _client;
+		IConfiguration _config;
 
 		public async Task MainAsync()
 		{
@@ -41,7 +40,7 @@ namespace TownCrier
 			await Task.Delay(-1);
 		}
 
-		private IServiceProvider ConfigureServices()
+		IServiceProvider ConfigureServices()
 		{
 			return new ServiceCollection()
 				// Base
@@ -54,23 +53,29 @@ namespace TownCrier
 				)
 				.AddSingleton<CommandHandlingService>()
 				// Logging
-				.AddLogging(x=>x.AddConsole())
+				.AddLogging(x => x.AddConsole())
 				.AddSingleton<LogService>()
 				// Extra
 				.AddSingleton(_config)
-				.AddSingleton<Timer_Service>()
+				.AddSingleton<TimerService>()
 				.AddSingleton(new CommandCacheService(_client))
 				.AddSingleton(new InteractiveService(_client))
 				// Adds Database
 				.AddSingleton(new LiteDatabase(Path.Combine(Directory.GetCurrentDirectory(), "Data", "Database.db")))
+				.AddSingleton<TownDatabase>()
 				// Initializes Activity Role Service
-				.AddSingleton<ActivityRoleManager>()
+				.AddSingleton<ActivityRoleService>()
 				// Initializes AltaAPIService
 				.AddSingleton<AltaAPI>()
+				// Initializes other functionality
+				.AddSingleton<CrossAlerter>()
+				.AddSingleton<NewcomerService>()
+				.AddSingleton<WikiSearcher>()
+				// Build
 				.BuildServiceProvider();
 		}
 
-		private IConfiguration BuildConfig()
+		IConfiguration BuildConfig()
 		{
 			return new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())

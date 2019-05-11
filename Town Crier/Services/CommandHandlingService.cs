@@ -1,46 +1,50 @@
-﻿using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.IO;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.Configuration;
-using Discord;
+﻿using Discord;
+using Discord.Addons.CommandCache;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
-using Discord.Addons.Interactive;
-using Discord.Addons.CommandCache;
 using LiteDB;
-using Newtonsoft.Json;
-using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using TownCrier.Database;
 
 namespace TownCrier.Services
 {
 	public class CommandHandlingService
 	{
-		private readonly DiscordSocketClient _discord;
-		private readonly CommandService _commands;
-		private readonly InteractiveService _interactive;
-		private readonly IConfiguration _config;
-		private readonly LiteDatabase _database;
-		private CommandCacheService _cache;
-		private IServiceProvider _provider;
-		private bool Ready = false;
+		readonly DiscordSocketClient discord;
+		readonly CommandService commands;
+		readonly InteractiveService interactive;
+		readonly IConfiguration config;
+		readonly TownDatabase database;
+		readonly CommandCacheService cache;
 
-		public CommandHandlingService(IConfiguration config, IServiceProvider provider,LiteDatabase liteDatabase, DiscordSocketClient discord, CommandService commands, CommandCacheService cache, InteractiveService interactive)
+		IServiceProvider provider;
+		
+		public CommandHandlingService(IConfiguration config, IServiceProvider provider, TownDatabase database, DiscordSocketClient discord, CommandService commands, CommandCacheService cache, InteractiveService interactive)
 		{
-			_discord = discord;
-			_commands = commands;
-			_provider = provider;
-			_config = config;
-			_interactive = interactive;
-			_cache = cache;
-			_database = liteDatabase;
+			this.discord = discord;
+			this.commands = commands;
+			this.provider = provider;
+			this.config = config;
+			this.interactive = interactive;
+			this.cache = cache;
+			this.database = database;
 
-			_discord.MessageReceived += MessageReceived;
-			_discord.ReactionAdded += OnReactAdded;
-			_discord.MessageUpdated += OnMessageUpdated;
+			this.discord.MessageReceived += MessageReceived;
+			this.discord.ReactionAdded += OnReactAdded;
+			this.discord.MessageUpdated += OnMessageUpdated;
+		}
+
+		public async Task InitializeAsync(IServiceProvider provider)
+		{
+			this.provider = provider;
+
+			await commands.AddModulesAsync(Assembly.GetEntryAssembly(), this.provider);
+			// Add additional initialization code here...
 		}
 
 		public async Task OnMessageUpdated(Cacheable<IMessage, ulong> _OldMsg, SocketMessage NewMsg, ISocketMessageChannel Channel)
@@ -49,7 +53,7 @@ namespace TownCrier.Services
 			if (OldMsg.Source != MessageSource.User) return;
 
 
-			if (_cache.TryGetValue(NewMsg.Id, out var CacheMsg))
+			if (cache.TryGetValue(NewMsg.Id, out var CacheMsg))
 			{
 				var reply = await Channel.GetMessageAsync(CacheMsg.First());
 				await reply.DeleteAsync();
@@ -63,36 +67,20 @@ namespace TownCrier.Services
 			//Jira Implementation here
 		}
 
-		public async Task InitializeAsync(IServiceProvider provider)
-		{
-			_provider = provider;
-			await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
-			// Add additional initialization code here...
-		}
-
-		private async Task MessageReceived(SocketMessage rawMessage)
+		async Task MessageReceived(SocketMessage rawMessage)
 		{
 			// Ignore system messages and messages from bots
 			if (!(rawMessage is SocketUserMessage message)) return;
 			if (message.Source != MessageSource.User) return;
 
-			var context = new SocketCommandContext(_discord, message);
-			var Guild = (context.Guild == null) ? null : _database.GetCollection<TownGuild>("Guilds").FindOne(x => x.GuildId == context.Guild.Id);
+			var context = new SocketCommandContext(discord, message);
+			var guild = (context.Guild == null) ? null : database.GetGuild(context.Guild);
 
 			int argPos = 0;
-			if (Guild == null && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
-			if (Guild != null && !message.HasStringPrefix(Guild.Prefix, ref argPos) && !message.HasMentionPrefix(_discord.CurrentUser, ref argPos)) return;
-
-			if (DateTime.Now.Month == 4 && DateTime.Now.Day == 1)
-			{
-				var chance = new Random().Next(0, 100);
-				if (chance <= 25)
-				{
-					await context.Channel.SendMessageAsync("OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The code monkeys at our headquarters are working VEWY HAWD to fix this!");
-					return;
-				}
-			}
-			var result = await _commands.ExecuteAsync(context, argPos, _provider);
+			if (guild == null && !message.HasMentionPrefix(discord.CurrentUser, ref argPos)) return;
+			if (guild != null && !message.HasStringPrefix(guild.Prefix, ref argPos) && !message.HasMentionPrefix(discord.CurrentUser, ref argPos)) return;
+			
+			var result = await commands.ExecuteAsync(context, argPos, provider);
 
 			if (result.Error.HasValue && (result.Error.Value != CommandError.UnknownCommand))
 			{

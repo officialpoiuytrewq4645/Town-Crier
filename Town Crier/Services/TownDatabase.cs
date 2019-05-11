@@ -26,12 +26,12 @@ namespace TownCrier.Services
 
 		public TownGuild GetGuild(IGuild guild)
 		{
-			return Guilds.FindById(guild.Id);
+			return Guilds.FindOne(x => x.GuildId == guild.Id);
 		}
 
 		public TownUser GetUser(IUser user)
 		{
-			TownUser result = Users.FindById(user.Id);
+			TownUser result = Users.FindOne(x => x.UserId == user.Id);
 
 			if (result == null)
 			{

@@ -12,14 +12,14 @@ using TownCrier.Database;
 
 namespace TownCrier.Services
 {
-	public class NewcommerService
+	public class NewcomerService
 	{
 		private readonly DiscordSocketClient _discord;
 		private IServiceProvider _provider;
 		private readonly IConfiguration _config;
 		private readonly LiteDatabase _database;
 
-		public NewcommerService(DiscordSocketClient client,LiteDatabase database,IServiceProvider provider,IConfiguration configuration)
+		public NewcomerService(DiscordSocketClient client,LiteDatabase database,IServiceProvider provider,IConfiguration configuration)
 		{
 			_discord = client;
 			_provider = provider;

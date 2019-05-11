@@ -263,6 +263,39 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Command Modules\ChatCraft\ChatCraft.cs" />
+    <Compile Include="Command Modules\ChatCraft\ChatCraftCombat.cs" />
+    <Compile Include="Command Modules\ChatCraft\ChatCraftCommands.cs" />
+    <Compile Include="Command Modules\ChatCraft\ChatCraftDebug.cs" />
+    <Compile Include="Command Modules\ChatCraft\ChatCraftState.cs" />
+    <Compile Include="Command Modules\ChatCraft\Connection.cs" />
+    <Compile Include="Command Modules\ChatCraft\Encounter.cs" />
+    <Compile Include="Command Modules\ChatCraft\EncounterCount.cs" />
+    <Compile Include="Command Modules\ChatCraft\EncounterSet.cs" />
+    <Compile Include="Command Modules\ChatCraft\EncounterWeight.cs" />
+    <Compile Include="Command Modules\ChatCraft\EnemyDefinition.cs" />
+    <Compile Include="Command Modules\ChatCraft\ExploreSet.cs" />
+    <Compile Include="Command Modules\ChatCraft\Item.cs" />
+    <Compile Include="Command Modules\ChatCraft\ItemCount.cs" />
+    <Compile Include="Command Modules\ChatCraft\ItemSet.cs" />
+    <Compile Include="Command Modules\ChatCraft\ItemType.cs" />
+    <Compile Include="Command Modules\ChatCraft\ItemWeight.cs" />
+    <Compile Include="Command Modules\ChatCraft\ItemWeightCount.cs" />
+    <Compile Include="Command Modules\ChatCraft\Location.cs" />
+    <Compile Include="Command Modules\ChatCraft\Recipe.cs" />
+    <Compile Include="Command Modules\ChatCraft\RecipeCount.cs" />
+    <Compile Include="Command Modules\ChatCraft\RecipeSet.cs" />
+    <Compile Include="Command Modules\ChatCraft\RecipeWeight.cs" />
+    <Compile Include="Command Modules\ChatCraft\Settings.cs" />
+    <Compile Include="Command Modules\ChatCraft\Slot.cs" />
+    <Compile Include="Command Modules\ChatCraft\SlotDictionaryConverter.cs" />
+    <Compile Include="Command Modules\ChatCraft\Stat.cs" />
+    <Compile Include="Command Modules\ChatCraft\StatCount.cs" />
+    <Compile Include="Command Modules\ChatCraft\StatWeight.cs" />
+    <Compile Include="Command Modules\ChatCraft\Unit.cs" />
+    <Compile Include="Command Modules\JiraReporter.cs" />
+    <Compile Include="Command Modules\MiniGames.cs" />
+    <Compile Include="Command Modules\WhoModule.cs" />
     <Compile Include="Database\TownGuild.cs" />
     <Compile Include="Database\TownResident.cs" />
     <Compile Include="Services\ActivityRoleService.cs" />
@@ -270,7 +303,7 @@
     <Compile Include="Command Modules\ChannelFilters.cs" />
     <Compile Include="Command Modules\CommandsProcessor.cs" />
     <Compile Include="Command Modules\DoYouCare.cs" />
-    <Compile Include="Services\NewcommerService.cs" />
+    <Compile Include="Services\NewcomerService.cs" />
     <Compile Include="Command Modules\OutOfOffice.cs" />
     <Compile Include="Command Modules\PointCounter.cs" />
     <Compile Include="Command Modules\ServerTeamAlert.cs" />
@@ -278,7 +311,6 @@
     <Compile Include="Command Modules\AccountModule.cs" />
     <Compile Include="Command Modules\BetModule.cs" />
     <Compile Include="Command Modules\InfoModule.cs" />
-    <Compile Include="Command Modules\JiraReporter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Services\CommandHandlingService.cs" />
     <Compile Include="Services\LoggingService.cs" />

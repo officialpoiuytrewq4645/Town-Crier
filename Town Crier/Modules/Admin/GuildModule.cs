@@ -1,4 +1,5 @@
-﻿using Discord.Addons.Interactive;
+﻿using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using LiteDB;
@@ -59,6 +60,193 @@ namespace TownCrier.Modules.Admin
 			{
 				Database.Guilds.Update(guild);
 			}
+		}
+
+		[Group("activity-role"), Alias("activityrole", "activity")]
+		public class ActivityRoleConfig : GuildModule
+		{
+			[Command("edit"), Alias("init", "create")]
+			public async Task Add(IRole role)
+			{
+				TownGuild guild = Database.GetGuild(Context.Guild);
+
+				if (guild == null)
+				{
+					return;
+				}
+
+				ActivityRole activity = guild.ActivityRoles.FirstOrDefault(x => x.AssociatedRole == role.Id);
+
+				if (activity == null)
+				{
+					activity = new ActivityRole() { AssociatedRole = role.Id };
+
+					guild.ActivityRoles.Add(activity);
+				}
+
+				await ReplyAsync("Editing cross alert...\n" +
+					$"Please answer the following questions ('{SkipCharacter}' to skip / leave default)");
+
+				await AskString($"What is the name of the activity?", activity.ActivityName, value => activity.ActivityName = value);
+
+				await AskEnum("What type of activity? (Playing, Streaming, Listening, Watching)", activity.ActivityType, value => activity.ActivityType = value);
+
+				Database.Guilds.Update(guild);
+
+				await ReplyAsync("Done!");
+			}
+
+			[Command("delete"), Alias("remove")]
+			public async Task Delete(IRole role)
+			{
+				TownGuild guild = Database.GetGuild(Context.Guild);
+
+				if (guild == null)
+				{
+					return;
+				}
+
+				ActivityRole activity = guild.ActivityRoles.FirstOrDefault(x => x.AssociatedRole == role.Id);
+
+				if (activity == null)
+				{
+					await ReplyAsync("Alert not found for " + role.Mention);
+				}
+				else
+				{
+					await ReplyAsync("Deleted activity for " + role.Mention);
+
+					guild.ActivityRoles.Remove(activity);
+
+					Database.Guilds.Update(guild);
+				}
+			}
+		}
+
+		[Group("cross-alert"), Alias("crossalert", "alert")]
+		public class CrossAlertConfig : GuildModule
+		{
+			[Command("edit"), Alias("init", "create")]
+			public async Task Add(IRole role)
+			{
+				TownGuild guild = Database.GetGuild(Context.Guild);
+
+				if (guild == null)
+				{
+					return;
+				}
+
+				CrossAlert alert = guild.CrossAlerts.FirstOrDefault(x => x.Role == role.Id);
+
+				if (alert == null)
+				{
+					alert = new CrossAlert() { Role = role.Id };
+
+					guild.CrossAlerts.Add(alert);
+				}
+
+				await ReplyAsync("Editing cross alert...\n" +
+					$"Please answer the following questions ('{SkipCharacter}' to skip / leave default)");
+				
+				await AskChannel($"Which channel should be alerted?", alert.Channel, value => alert.Channel = value);
+
+				Database.Guilds.Update(guild);
+
+				await ReplyAsync("Done!");
+			}
+
+			[Command("delete"), Alias("remove")]
+			public async Task Delete(IRole role)
+			{
+				TownGuild guild = Database.GetGuild(Context.Guild);
+
+				if (guild == null)
+				{
+					return;
+				}
+
+				CrossAlert alert = guild.CrossAlerts.FirstOrDefault(x => x.Role == role.Id);
+
+				if (alert == null)
+				{
+					await ReplyAsync("Alert not found for " + role.Mention);
+				}
+				else
+				{
+					await ReplyAsync("Deleted filter for " + role.Mention);
+
+					guild.CrossAlerts.Remove(alert);
+
+					Database.Guilds.Update(guild);
+				}
+			}
+		}
+
+		[Group("filter")]
+		public class FilterConfig : GuildModule
+		{
+			[Command("edit"), Alias("init", "create")]
+			public async Task Add(ITextChannel channel)
+			{
+				TownGuild guild = Database.GetGuild(Context.Guild);
+
+				if (guild == null)
+				{
+					return;
+				}
+				
+				ChannelFilter filter = guild.ChannelFilters.FirstOrDefault(x => x.Channel == channel.Id);
+				
+				if (filter == null)
+				{
+					filter = new ChannelFilter() { Channel = channel.Id };
+
+					guild.ChannelFilters.Add(filter);
+				}
+
+				await ReplyAsync("Editing filter...\n" +
+					$"Please answer the following questions ('{SkipCharacter}' to skip / leave default)");
+
+				await AskEnum($"What type of filter? (Heading or Image)", filter.Type, value => filter.Type = value);
+
+				await AskChannel($"Which channel should rejected content be copied to?", filter.AlertChannel, value => filter.AlertChannel = value);
+
+				Database.Guilds.Update(guild);
+
+				await ReplyAsync("Done!");
+			}
+
+			[Command("delete"), Alias("remove")]
+			public async Task Delete(ITextChannel channel)
+			{
+				TownGuild guild = Database.GetGuild(Context.Guild);
+
+				if (guild == null)
+				{
+					return;
+				}
+
+				ChannelFilter filter = guild.ChannelFilters.FirstOrDefault(x => x.Channel == channel.Id);
+
+				if (filter == null)
+				{
+					await ReplyAsync("Filter not found for " + channel.Mention);
+				}
+				else
+				{
+					await ReplyAsync("Deleted filter for " + channel.Mention);
+
+					guild.ChannelFilters.Remove(filter);
+
+					Database.Guilds.Update(guild);
+				}
+			}
+		}
+
+		public Task<bool> AskEnum<T>(string question, T defaultValue, Action<T> apply)
+			where T : struct
+		{
+			return Ask<T>(question, defaultValue, apply, Enum.TryParse<T>);
 		}
 
 		public Task<bool> AskInt(string question, int defaultValue, Action<int> apply)

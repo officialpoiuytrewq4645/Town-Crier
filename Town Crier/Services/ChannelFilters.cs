@@ -51,14 +51,21 @@ namespace TownCrier.Services
 				return;
 			}
 
-			switch (filter.Type)
+			try
 			{
-				case ChannelFilter.FilterType.Heading:
-					await FilterHeadings(filter, message);
-					break;
-				case ChannelFilter.FilterType.Image:
-					await FilterScreenshots(filter, message);
-					break;
+				switch (filter.Type)
+				{
+					case ChannelFilter.FilterType.Heading:
+						await FilterHeadings(filter, message);
+						break;
+					case ChannelFilter.FilterType.Image:
+						await FilterScreenshots(filter, message);
+						break;
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.StackTrace);
 			}
 		}
 		
@@ -66,8 +73,6 @@ namespace TownCrier.Services
 		{
 			if (message.Attachments.Count == 0 && !message.Content.Contains(".jpg") && !message.Content.Contains(".png") && !message.Content.Contains(".gif") && !message.Content.Contains(".jpeg"))
 			{
-				await message.DeleteAsync();
-
 				if (filter.AlertChannel != 0)
 				{
 					ITextChannel discussion = await (message.Channel as IGuildChannel).Guild.GetChannelAsync(filter.AlertChannel) as ITextChannel;
@@ -81,6 +86,8 @@ namespace TownCrier.Services
 					await ReplyAndDelete(message, $"Hi {message.Author.Mention}! Only images are allowed here!", 10);
 				}
 
+				await message.DeleteAsync();
+
 				return false;
 			}
 
@@ -91,12 +98,10 @@ namespace TownCrier.Services
 		{
 			if (!message.Content.StartsWith("```"))
 			{
-				await message.DeleteAsync();
-				
 				if (filter.AlertChannel != 0)
 				{
 					ITextChannel channel = (message.Channel as ITextChannel);
-					ITextChannel discussion = await channel.Guild.GetChannelAsync(449033901168656403) as ITextChannel;
+					ITextChannel discussion = await channel.Guild.GetChannelAsync(filter.AlertChannel) as ITextChannel;
 
 					await discussion.SendMessageAsync($@"Hi {message.Author.Mention} - Messages in {channel.Mention} require a heading!
 
@@ -113,6 +118,8 @@ Alternatively react with a :thumbsup: to show your support.
 				{
 					await ReplyAndDelete(message, $"Hi {message.Author.Mention}! Your message needs a heading! (Starting with \\```<Your heading>>>```)", 10);
 				}
+
+				await message.DeleteAsync();
 
 				return false;
 			}

@@ -33,6 +33,15 @@ namespace TownCrier
 			services.GetRequiredService<LogService>();
 			await services.GetRequiredService<CommandHandlingService>().InitializeAsync(services);
 
+			services.GetRequiredService<OutOfOffice>();
+			services.GetRequiredService<NewcomerService>();
+			services.GetRequiredService<DoYouCare>();
+			services.GetRequiredService<CrossAlerter>();
+			services.GetRequiredService<PointCounter>();
+			services.GetRequiredService<WikiSearcher>();
+			services.GetRequiredService<ChannelFilters>();
+			services.GetRequiredService<ActivityRoleService>();
+
 			await _client.LoginAsync(TokenType.Bot, _config["token"]);
 			await _client.SetGameAsync(_config["status"]);
 			await _client.StartAsync();
@@ -63,8 +72,6 @@ namespace TownCrier
 				// Adds Database
 				.AddSingleton(new LiteDatabase(Path.Combine(Directory.GetCurrentDirectory(), "Data", "Database.db")))
 				.AddSingleton<TownDatabase>()
-				// Initializes Activity Role Service
-				.AddSingleton<ActivityRoleService>()
 				// Initializes AltaAPIService
 				.AddSingleton<AltaAPI>()
 				// Initializes other functionality
@@ -75,6 +82,7 @@ namespace TownCrier
 				.AddSingleton<PointCounter>()
 				.AddSingleton<DoYouCare>()
 				.AddSingleton<OutOfOffice>()
+				.AddSingleton<ActivityRoleService>()
 				// Build
 				.BuildServiceProvider();
 		}

@@ -270,13 +270,12 @@
     <Compile Include="Database\TownGuild.cs" />
     <Compile Include="Services\ActivityRoleService.cs" />
     <Compile Include="Services\AltaAPIServiceHandler.cs" />
-    <Compile Include="Modules\ChannelFilters.cs" />
-    <Compile Include="Modules\CommandsProcessor.cs" />
-    <Compile Include="Modules\DoYouCare.cs" />
+    <Compile Include="Services\ChannelFilters.cs" />
+    <Compile Include="Services\DoYouCare.cs" />
     <Compile Include="Services\LogService.cs" />
     <Compile Include="Services\NewcomerService.cs" />
-    <Compile Include="Modules\OutOfOffice.cs" />
-    <Compile Include="Modules\PointCounter.cs" />
+    <Compile Include="Services\OutOfOffice.cs" />
+    <Compile Include="Services\PointCounter.cs" />
     <Compile Include="Services\WikiSearcher.cs" />
     <Compile Include="Modules\AccountModule.cs" />
     <Compile Include="Modules\BetModule.cs" />

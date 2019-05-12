@@ -43,7 +43,7 @@ namespace TownCrier.Services
 
 			foreach (CrossAlert crossAlert in guild.CrossAlerts
 				.Where(x => x.Channel != channel.Id)
-				.Where(x => message.MentionedRoles.Contains(x.Role)))
+				.Where(x => message.MentionedRoles.Any(role => role.Id == x.Role)))
 			{
 				ITextChannel targetChannel = await channel.Guild.GetTextChannelAsync(crossAlert.Channel);
 

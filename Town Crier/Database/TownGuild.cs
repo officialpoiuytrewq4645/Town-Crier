@@ -25,7 +25,7 @@ namespace TownCrier.Database
 		/// <summary>
 		/// These roles are auto-assigned to users based on their activity.
 		/// </summary>
-		public List<GivableRole> GivableRoles { get; set; } = new List<GivableRole>();
+		public List<ActivityRole> ActivityRoles { get; set; } = new List<ActivityRole>();
 
 		/// <summary>
 		/// These channels are pinged when the role is mentioned
@@ -46,7 +46,7 @@ namespace TownCrier.Database
 		/// This role is labeled as the Admin role, assignable by the server owner.
 		/// Allows bypassing of several permission checks
 		/// </summary>
-		public SocketRole AdminRole { get; set; } = null;
+		public ulong AdminRole { get; set; } = 0;
 
 		/// <summary>
 		/// Channel assigned for public-level notifications.
@@ -105,22 +105,22 @@ namespace TownCrier.Database
 		public string ParseMessage(SocketGuildUser user, DiscordSocketClient client)
 		{
 			string returnstring = WelcomeMessage.Replace("{user}", user.Mention).Replace("{server}", client.GetGuild(GuildId).Name).Replace("{server:count}", client.GetGuild(GuildId).Users.Count.ToString());
-			returnstring = AdminRole!=null ? returnstring.Replace("{admin}", AdminRole.Mention) : returnstring;
+			returnstring = AdminRole != 0 ? returnstring.Replace("{admin}", user.Guild.GetRole(AdminRole)?.Mention) : returnstring;
 			return returnstring;
 		}
 	}
 
-	public class GivableRole
+	public class ActivityRole
 	{
 		public ActivityType ActivityType { get; set; }
 		public string ActivityName { get; set; }
-		public SocketRole AssociatedRole { get; set; }
+		public ulong AssociatedRole { get; set; }
 	}
 
 	public class CrossAlert
 	{
 		public ulong Channel { get; set; }
-		public SocketRole Role { get; set; }
+		public ulong Role { get; set; }
 	}
 
 	public class ChannelFilter

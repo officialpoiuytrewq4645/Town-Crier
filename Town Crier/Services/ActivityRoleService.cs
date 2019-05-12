@@ -131,30 +131,76 @@ namespace TownCrier
 			this.database = database;
 
 			this.client.GuildMemberUpdated += UserUpdated;
+
+			this.client.Ready += Ready;
 		}
 
-		 async Task UserUpdated(SocketGuildUser OldUser, SocketGuildUser NewUser)
+		async Task Ready()
+		{
+			foreach (TownGuild guild in database.Guilds.FindAll())
+			{
+				if (guild.ActivityRoles.Count == 0)
+				{
+					continue;
+				}
+
+				SocketGuild discordGuild = client.GetGuild(guild.GuildId);
+
+				await discordGuild.DownloadUsersAsync();
+
+				foreach (SocketGuildUser user in discordGuild.Users)
+				{
+					await UpdateRoles(null, user, guild);
+				}
+			}
+		}
+
+		async Task UserUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
 		{
 			// If both activities are the same (in type & message), return
-			if (OldUser.Activity == NewUser.Activity) return;
+			if (oldUser.Activity == newUser.Activity) return;
 
 			// Fetch the guild from the Database
-			var guild = database.GetGuild(NewUser.Guild);
+			var guild = database.GetGuild(newUser.Guild);
 
-			// Pull all roles tied to that particular activity type
-			foreach (var x in guild.GivableRoles.Where(x => x.ActivityType == NewUser.Activity.Type))
+			await UpdateRoles(oldUser, newUser, guild);
+		}
+
+		async Task UpdateRoles(SocketGuildUser oldUser, SocketGuildUser newUser, TownGuild guild)
+		{
+			if (oldUser == null || oldUser.Activity != null)
 			{
-				// If the user wasn't playing/watching/streaming X but now is, give the role
-				if (OldUser.Activity.Name.ToLower() != x.ActivityName
-					&& NewUser.Activity.Name.ToLower() == x.ActivityName.ToLower())
+				IEnumerable<ActivityRole> oldPotentialRoles = oldUser == null ? guild.ActivityRoles : guild.ActivityRoles.Where(x => x.ActivityType == oldUser.Activity.Type);
+
+				// Removing old roles
+				foreach (var activity in oldPotentialRoles)
 				{
-					await NewUser.AddRoleAsync(x.AssociatedRole);
+					IRole role = newUser.Roles.FirstOrDefault(x => x.Id == activity.AssociatedRole);
+
+					if (role != null)
+					{
+						if (!Regex.IsMatch(newUser.Activity.Name, activity.ActivityName))
+						{
+							await newUser.RemoveRoleAsync(role);
+						}
+					}
 				}
-				//if the user was playing/watching/streaming X but now isn't. remove the role
-				if (NewUser.Activity.Name.ToLower() != x.ActivityName
-					&& OldUser.Activity.Name.ToLower() == x.ActivityName.ToLower())
+			}
+
+			if (newUser.Activity != null)
+			{
+				// Adding new roles
+				foreach (var activity in guild.ActivityRoles.Where(x => x.ActivityType == newUser.Activity.Type))
 				{
-					await NewUser.RemoveRoleAsync(x.AssociatedRole);
+					IRole role = newUser.Guild.GetRole(activity.AssociatedRole);
+
+					if (!newUser.Roles.Contains(role))
+					{
+						if (Regex.IsMatch(newUser.Activity.Name, activity.ActivityName))
+						{
+							await newUser.AddRoleAsync(role);
+						}
+					}
 				}
 			}
 		}

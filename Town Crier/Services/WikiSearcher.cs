@@ -55,7 +55,7 @@ namespace TownCrier.Services
 			}
 		}
 	}
-
+	
 	public class WikiSearcher
 	{
 		const string WikiStart = "{";

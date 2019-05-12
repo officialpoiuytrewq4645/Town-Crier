@@ -68,9 +68,13 @@ namespace TownCrier
 				// Initializes AltaAPIService
 				.AddSingleton<AltaAPI>()
 				// Initializes other functionality
+				.AddSingleton<ChannelFilters>()
 				.AddSingleton<CrossAlerter>()
 				.AddSingleton<NewcomerService>()
 				.AddSingleton<WikiSearcher>()
+				.AddSingleton<PointCounter>()
+				.AddSingleton<DoYouCare>()
+				.AddSingleton<OutOfOffice>()
 				// Build
 				.BuildServiceProvider();
 		}

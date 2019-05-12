@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TownCrier.Features
+namespace TownCrier.Services
 {
 	public class OutOfOffice
 	{
@@ -22,15 +22,16 @@ namespace TownCrier.Features
 		{
 			//TODO: Move some logic here into a standardized time based response system?
 
+			if (!(message.Channel is ITextChannel channel))
+			{
+				return;
+			}
+
 			DateTime now = DateTime.Now;
 
-			var channel = message.Channel as ITextChannel;
-
-			if (channel != null &&
-				(now.Hour >= 23 || now.Hour < 8) &&
+			if ((now.Hour >= 23 || now.Hour < 8) &&
 				message.MentionedRoles.Any(item => item.Name == "devs" || item.Name == "admins"))
 			{
-
 				IReadOnlyCollection<IGuildChannel> channels = await channel.Guild.GetChannelsAsync(CacheMode.CacheOnly);
 				ITextChannel bugs = channels.FirstOrDefault(item => item.Name == "bugs") as ITextChannel;
 				ITextChannel feedback = channels.FirstOrDefault(item => item.Name == "feedback") as ITextChannel;

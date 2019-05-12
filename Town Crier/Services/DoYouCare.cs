@@ -5,11 +5,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TownCrier.Features
+namespace TownCrier.Services
 {
-	static class DoYouCare
+	public class DoYouCare
 	{
-		public static async Task Process(SocketUserMessage message)
+		DiscordSocketClient discord;
+
+		public DoYouCare(DiscordSocketClient discord)
+		{
+			this.discord = discord;
+
+			discord.MessageReceived += Handle;
+		}
+
+		async Task Handle(SocketMessage message)
 		{
 			if (message.Content.ToLower().Contains("do you care") && message.Content.Contains("?"))
 			{
@@ -21,8 +30,6 @@ namespace TownCrier.Features
 				{
 					await message.Channel.SendMessageAsync(message.Author.Mention + " - No.");
 				}
-
-				return;
 			}
 		}
 	}

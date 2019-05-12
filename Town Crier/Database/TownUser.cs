@@ -24,10 +24,10 @@ namespace TownCrier.Database
 
 		public UserAltaInfo AltaInfo { get; set; }
 
-		public UserScording Scoring { get; set; }
+		public UserScoring Scoring { get; set; }
 	}
 
-	public class UserScording
+	public class UserScoring
 	{
 		public DateTime LastMessage { get; set; }
 		public uint Score { get; set; } = 0;

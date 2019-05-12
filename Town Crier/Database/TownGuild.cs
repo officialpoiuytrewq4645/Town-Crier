@@ -33,6 +33,11 @@ namespace TownCrier.Database
 		public List<CrossAlert> CrossAlerts { get; set; } = new List<CrossAlert>();
 
 		/// <summary>
+		/// These filters only allow particular content in channels
+		/// </summary>
+		public List<ChannelFilter> ChannelFilters { get; set; } = new List<ChannelFilter>();
+
+		/// <summary>
 		/// This role is assinged to Alta supporters.
 		/// </summary>
 		public SocketRole SupporterRole { get; set; } = null;
@@ -116,5 +121,18 @@ namespace TownCrier.Database
 	{
 		public ulong Channel { get; set; }
 		public SocketRole Role { get; set; }
+	}
+
+	public class ChannelFilter
+	{
+		public enum FilterType
+		{
+			Heading,
+			Image
+		}
+
+		public ulong Channel { get; set; }
+		public ulong AlertChannel { get; set; }
+		public FilterType Type { get; set; }
 	}
 }

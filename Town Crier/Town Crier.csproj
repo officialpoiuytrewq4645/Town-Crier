@@ -267,6 +267,7 @@
     <Compile Include="Modules\MiniGames.cs" />
     <Compile Include="Modules\ServersModule.cs" />
     <Compile Include="Modules\WhoModule.cs" />
+    <Compile Include="Services\AccountService.cs" />
     <Compile Include="Services\CrossAlerter.cs" />
     <Compile Include="Modules\InfoModule.cs" />
     <Compile Include="Modules\JiraReporter.cs" />

@@ -1,4 +1,7 @@
-﻿using Discord.Addons.Interactive;
+﻿using Alta.WebApi.Models;
+using Alta.WebApi.Models.DTOs.Responses;
+using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json;
@@ -19,74 +22,92 @@ namespace TownCrier
 		public AltaAPI AltaApi { get; set; }
 		public TownDatabase Database { get; set; }
 
-		public class AccountDatabase
-		{
-			public Dictionary<ulong, AccountInfo> accounts = new Dictionary<ulong, AccountInfo>();
+		public AccountService AccountService { get; set; }
 
-			public Dictionary<int, ulong> altaIdMap = new Dictionary<int, ulong>();
+		//public class AccountDatabase
+		//{
+		//	public Dictionary<ulong, AccountInfo> accounts = new Dictionary<ulong, AccountInfo>();
 
-			public SortedSet<AccountInfo> expiryAccounts = new SortedSet<AccountInfo>(new AccountInfo.Comparer());
-		}
+		//	public Dictionary<int, ulong> altaIdMap = new Dictionary<int, ulong>();
 
-		public class AccountInfo
-		{
-			public class Comparer : IComparer<AccountInfo>
-			{
-				public int Compare(AccountInfo x, AccountInfo y)
-				{
-					return x.supporterExpiry.CompareTo(y.supporterExpiry);
-				}
-			}
+		//	public SortedSet<AccountInfo> expiryAccounts = new SortedSet<AccountInfo>(new AccountInfo.Comparer());
+		//}
 
-			public ulong discordIdentifier;
-			public int altaIdentifier;
-			public DateTime supporterExpiry;
-			public bool isSupporter;
-			public string username;
-		}
+		//public class AccountInfo
+		//{
+		//	public class Comparer : IComparer<AccountInfo>
+		//	{
+		//		public int Compare(AccountInfo x, AccountInfo y)
+		//		{
+		//			return x.supporterExpiry.CompareTo(y.supporterExpiry);
+		//		}
+		//	}
+
+		//	public ulong discordIdentifier;
+		//	public int altaIdentifier;
+		//	public DateTime supporterExpiry;
+		//	public bool isSupporter;
+		//	public string username;
+		//}
 
 		class VerifyData
 		{
 			public string discord;
 		}
 
-		static SocketGuild guild;
-		static SocketRole supporterRole;
-		static SocketTextChannel supporterChannel;
-		static SocketTextChannel generalChannel;
-
 		// NOTE: Both of these commands will be tied to a global clock that will periodically update all accounts every 15~30 mins.
 
-		//[Command("update")]
-		//public async Task Update()
-		//{
-		//	if (database.accounts.TryGetValue(Context.User.Id, out AccountInfo info))
-		//	{
-		//		await UpdateAsync(info, (SocketGuildUser)Context.User);
+		[Command("who")]
+		[RequireUserPermission(GuildPermission.ManageGuild)]
+		public async Task Who(string username)
+		{
+			TownUser entry = Database.Users.FindOne(item => item.AltaInfo != null && string.Compare(item.AltaInfo.Username, username, true) == 0);
+			
+			if (entry != null)
+			{
+				await ReplyAsync(username + " is " + entry.Name);
+			}
+			else
+			{
+				await ReplyAsync("Couldn't find " + username);
+			}
+		}
 
-		//		await ReplyAsync(Context.User.Mention + ", " + $"Hey {info.username}, your account info has been updated!");
-		//	}
-		//	else
-		//	{
-		//		await ReplyAsync(Context.User.Mention + ", " + "You have not linked to an Alta account! To link, visit the 'Account Settings' page in the launcher.");
-		//	}
-		//}
+
+		[Command("update")]
+		public async Task Update()
+		{
+			TownUser entry = Database.GetUser(Context.User);
+
+			if (entry.AltaInfo != null)
+			{
+				await AccountService.UpdateAsync(entry, (SocketGuildUser)Context.User);
+
+				await ReplyAsync(Context.User.Mention + ", " + $"Hey {entry.AltaInfo.Username}, your account info has been updated!");
+			}
+			else
+			{
+				await ReplyAsync(Context.User.Mention + ", " + "You have not linked to an Alta account! To link, visit the 'Account Settings' page in the launcher.");
+			}
+		}
 
 
-		//[Command("forceupdate")]
-		//public async Task Update(SocketUser user)
-		//{
-		//	if (database.accounts.TryGetValue(user.Id, out AccountInfo info))
-		//	{
-		//		await UpdateAsync(info, null);
+		[Command("forceupdate"), RequireUserPermission(Discord.GuildPermission.ManageGuild)]
+		public async Task Update(SocketUser user)
+		{
+			TownUser entry = Database.GetUser(user);
+			
+			if (entry.AltaInfo != null)
+			{
+				await AccountService.UpdateAsync(entry, (SocketGuildUser)user);
 
-		//		await ReplyAsync(Context.User.Mention + ", " + $"{info.username}'s account info has been updated!");
-		//	}
-		//	else
-		//	{
-		//		await ReplyAsync(Context.User.Mention + ", " + user.Username + " have not linked to an Alta account!");
-		//	}
-		//}
+				await ReplyAsync(Context.User.Mention + ", " + $"{entry.AltaInfo.Username}'s account info has been updated!");
+			}
+			else
+			{
+				await ReplyAsync(Context.User.Mention + ", " + user.Username + " have not linked to an Alta account!");
+			}
+		}
 
 
 		[Command("unlink")]
@@ -178,6 +199,8 @@ namespace TownCrier
 						if (user.AltaInfo.Identifier == id)
 						{
 							await ReplyAsync(Context.User.Mention + ", " + "Already connected!");
+
+							await AccountService.UpdateAsync(user, (SocketGuildUser)Context.User);
 							return;
 						}
 
@@ -188,7 +211,7 @@ namespace TownCrier
 							user.AltaInfo.Unlink();
 						}
 
-						if (Database.Users.Exists(x => x.AltaInfo.Identifier != 0 && x.AltaInfo.Identifier == id && x.UserId != Context.User.Id))
+						if (Database.Users.Exists(x => x.AltaInfo != null && x.AltaInfo.Identifier == id && x.UserId != Context.User.Id))
 						{
 							var oldUsers = Database.Users.Find(x => x.AltaInfo.Identifier == id && x.UserId != Context.User.Id);
 
@@ -203,7 +226,8 @@ namespace TownCrier
 						}
 
 						user.AltaInfo.Identifier = id;
-						user.AltaInfo.Username = AltaApi.ApiClient.UserClient.GetUserInfoAsync(id).GetAwaiter().GetResult().Username;
+						
+						await AccountService.UpdateAsync(user, (SocketGuildUser)Context.User);
 
 						await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaInfo.Username}!");
 					}

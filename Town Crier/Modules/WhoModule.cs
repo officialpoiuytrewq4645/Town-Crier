@@ -3,42 +3,46 @@ using Discord.Commands;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using DiscordBot.Modules.ChatCraft;
+using Discord.Addons.Interactive;
+using TownCrier.Database;
+using TownCrier.Services;
 
 namespace DiscordBot.Modules
 {
 	[Group("who")]
-	public class WhoModule : CrierModuleBase
+	public class WhoModule : InteractiveBase<SocketCommandContext>
 	{
-		[Command("help")]
-		public async Task Help()
-		{
-			List<string> commands = new List<string>();
-			List<string> descriptions = new List<string>();
+		public TownDatabase Database { get; set; }
 
-			string message = $"Here are the things you'll need to know:\n\n";
+		//[Command("help")]
+		//public async Task Help()
+		//{
+		//	List<string> commands = new List<string>();
+		//	List<string> descriptions = new List<string>();
 
-			commands.Add("am i");
-			descriptions.Add("Tells you what you want to hear");
+		//	string message = $"Here are the things you'll need to know:\n\n";
 
-			commands.Add("i am is [description]");
-			descriptions.Add("Defines who you (think) you are");
+		//	commands.Add("am i");
+		//	descriptions.Add("Tells you what you want to hear");
 
-			commands.Add("is [target]");
-			descriptions.Add("Tells you who someone is");
+		//	commands.Add("i am is [description]");
+		//	descriptions.Add("Defines who you (think) you are");
 
-			message += ShowCommands("!who ", commands, descriptions);
-			
-			await ReplyAsync(message);
-		}
-		
+		//	commands.Add("is [target]");
+		//	descriptions.Add("Tells you who someone is");
+
+		//	message += ShowCommands("!who ", commands, descriptions);
+
+		//	await ReplyAsync(message);
+		//}
+
 		[Summary("Tells you what you want to hear")]
 		[Command("am i")]
 		public async Task AmI()
 		{
-			Player player = GetPlayer();
+			TownUser user = Database.GetUser(Context.User);
 
-			await ReplyAsync(player.name + " is " + (player.description ?? "... You?"));
+			await ReplyAsync(user.Name + " is " + (user.Description ?? "... You?"));
 		}
 
 		[Summary("Defines who you (think) you are")]
@@ -51,13 +55,20 @@ namespace DiscordBot.Modules
 				return;
 			}
 
-			GetPlayer().description = description;
+			TownUser user = Database.GetUser(Context.User);
+
+			user.Description = description;
+
+			Database.Users.Update(user);
 		}
 
 		[Summary("Commands to tell you who someone is")]
 		[Group("is")]
-		public class Is : CrierModuleBase
+		public class Is : InteractiveBase<SocketCommandContext>
 		{
+			public TownDatabase Database { get; set; }
+
+
 			[Command("tima")]
 			public async Task Tima() => await ReplyAsync("Tima is the CEO of Alta. He doesn't do much.");
 
@@ -112,9 +123,9 @@ namespace DiscordBot.Modules
 			[Command]
 			public async Task IsCommand(string person)
 			{
-				Player found = ChatCraft.Instance.State.players.FirstOrDefault(item => string.Equals(person, item.name, StringComparison.InvariantCultureIgnoreCase));
-
-				if (found == null)
+				TownUser user = Database.Users.FindOne(item => item.Name == person);
+				
+				if (user == null)
 				{
 					Random random = new Random();
 
@@ -122,13 +133,13 @@ namespace DiscordBot.Modules
 					return;
 				}
 
-				if (found.description == null)
+				if (user.Description == null)
 				{
 					await ReplyAsync("I've met them, they didn't tell me much about themselves though.");
 					return;
 				}
 
-				await ReplyAsync(person + " is " + found.description);
+				await ReplyAsync(person + " is " + user.Description);
 			}
 		}
 	}

@@ -11,12 +11,13 @@ namespace TownCrier.Database
 		/// </summary>
 		[BsonId]
 		public ulong UserId { get; set; }
-		
-		/// <summary>
-		/// Whether or not the user is an admin on this Guild's itteration of ChatCraft
-		/// </summary>
-		public bool isAdmin { get; set; } = false;
-		
+				
+		public string Name { get; set; }
+
+		public string Description { get; set; }
+
+		public int Coins { get; set; }
+
 		/// <summary>
 		/// Date in which the user first joined the server.
 		/// </summary>

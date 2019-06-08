@@ -41,6 +41,7 @@ namespace TownCrier
 			services.GetRequiredService<WikiSearcher>();
 			services.GetRequiredService<ChannelFilters>();
 			services.GetRequiredService<ActivityRoleService>();
+			services.GetRequiredService<Migrator>();
 
 			await _client.LoginAsync(TokenType.Bot, _config["token"]);
 			await _client.SetGameAsync(_config["status"]);
@@ -83,6 +84,8 @@ namespace TownCrier
 				.AddSingleton<DoYouCare>()
 				.AddSingleton<OutOfOffice>()
 				.AddSingleton<ActivityRoleService>()
+				//Migrate
+				.AddSingleton<Migrator>()
 				// Build
 				.BuildServiceProvider();
 		}

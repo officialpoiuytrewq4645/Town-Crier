@@ -35,9 +35,15 @@ namespace TownCrier.Services
 
 			if (result == null)
 			{
-				result = new TownUser() { UserId = user.Id };
+				result = new TownUser() { UserId = user.Id, Name = user.Username };
 
 				Users.Insert(result);
+			}
+			else if (result.Name != user.Username)
+			{
+				result.Name = user.Username;
+
+				Users.Update(result);
 			}
 
 			return result;

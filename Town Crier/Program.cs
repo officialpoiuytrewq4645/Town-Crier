@@ -42,6 +42,7 @@ namespace TownCrier
 			services.GetRequiredService<ChannelFilters>();
 			services.GetRequiredService<ActivityRoleService>();
 			services.GetRequiredService<Migrator>();
+			services.GetRequiredService<AccountService>();
 
 			await _client.LoginAsync(TokenType.Bot, _config["token"]);
 			await _client.SetGameAsync(_config["status"]);
@@ -75,6 +76,7 @@ namespace TownCrier
 				.AddSingleton<TownDatabase>()
 				// Initializes AltaAPIService
 				.AddSingleton<AltaAPI>()
+				.AddSingleton<AccountService>()
 				// Initializes other functionality
 				.AddSingleton<ChannelFilters>()
 				.AddSingleton<CrossAlerter>()

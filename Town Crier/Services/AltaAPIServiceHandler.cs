@@ -30,6 +30,7 @@ namespace TownCrier.Services
 
 			StartWithEndpoint(HighLevelApiClientFactory.ProductionEndpoint);
 
+			EnsureLoggedIn().Wait();
 			//No need to update username/identifier on interval. Needs to be changed to update supporter status, only for those who it's passed expiry for
 			//this.timer.OnClockInterval += _timer_OnClockInterval;
 		}

@@ -53,6 +53,7 @@ namespace TownCrier
 
 		public Migrator(TownDatabase database)
 		{
+			return;
 			Database = database;
 
 			GetAltaLinks();

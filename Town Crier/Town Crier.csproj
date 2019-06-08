@@ -262,8 +262,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database\TownUser.cs" />
+    <Compile Include="Migration\Migration.cs" />
     <Compile Include="Modules\Admin\GuildModule.cs" />
     <Compile Include="Modules\MiniGames.cs" />
+    <Compile Include="Modules\ServersModule.cs" />
+    <Compile Include="Modules\WhoModule.cs" />
     <Compile Include="Services\CrossAlerter.cs" />
     <Compile Include="Modules\InfoModule.cs" />
     <Compile Include="Modules\JiraReporter.cs" />

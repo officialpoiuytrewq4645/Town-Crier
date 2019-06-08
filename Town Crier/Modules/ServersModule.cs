@@ -1,13 +1,21 @@
-﻿using Discord.Commands;
+﻿using Alta.WebApi.Models;
+using Alta.WebApi.Models.DTOs.Responses;
+using Discord.Addons.Interactive;
+using Discord.Commands;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using TownCrier.Services;
 
 namespace TownCrier.Modules
 {
 	[Group("servers"), Alias("s", "server")]
-	public class ServersModule : CrierModuleBase
+	public class ServersModule : InteractiveBase<SocketCommandContext>
 	{
+		public AltaAPI AltaApi { get; set; }
+
 		public enum Map
 		{
 			Town,
@@ -18,7 +26,7 @@ namespace TownCrier.Modules
 		[Command(), Alias("online")]
 		public async Task Online()
 		{
-			IEnumerable<GameServerInfo> servers = await AltaAPI.ApiClient.ServerClient.GetOnlineServersAsync();
+			IEnumerable<GameServerInfo> servers = await AltaApi.ApiClient.ServerClient.GetOnlineServersAsync();
 
 			StringBuilder response = new StringBuilder();
 
@@ -33,7 +41,7 @@ namespace TownCrier.Modules
 					(Map)server.SceneIndex);
 			}
 
-			await ReplyMentionAsync(response.ToString());
+			await ReplyAsync(response.ToString());
 		}
 
 		[Command("players"), Alias("player", "p")]
@@ -41,7 +49,7 @@ namespace TownCrier.Modules
 		{
 			serverName = serverName.ToLower();
 
-			IEnumerable<GameServerInfo> servers = await AltaAPI.ApiClient.ServerClient.GetOnlineServersAsync();
+			IEnumerable<GameServerInfo> servers = await AltaApi.ApiClient.ServerClient.GetOnlineServersAsync();
 
 			StringBuilder response = new StringBuilder();
 
@@ -61,7 +69,7 @@ namespace TownCrier.Modules
 
 						foreach (UserInfo user in server.OnlinePlayers)
 						{
-							MembershipStatusResponse membershipResponse = await AltaAPI.ApiClient.UserClient.GetMembershipStatus(user.Identifier);
+							MembershipStatusResponse membershipResponse = await AltaApi.ApiClient.UserClient.GetMembershipStatus(user.Identifier);
 
 							response.AppendFormat("- {1}{0}\n", user.Username, membershipResponse.IsMember ? "<:Supporter:547252984481054733> " : "");
 						}
@@ -79,7 +87,7 @@ namespace TownCrier.Modules
 				}
 			}
 
-			await ReplyMentionAsync(response.ToString());
+			await ReplyAsync(response.ToString());
 		}
 	}
 }

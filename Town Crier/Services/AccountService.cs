@@ -3,50 +3,135 @@ using Alta.WebApi.Models.DTOs.Responses;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TownCrier.Database;
+using Discord;
 
 namespace TownCrier.Services
 {
 	public class AccountService
 	{
+		public DiscordSocketClient Client { get; set; }
 		public TownDatabase Database { get; set; }
 		public AltaAPI AltaApi { get; set; }
-		public TimerService Timer { get; set; }
 
 		static SocketGuild guild;
 		static SocketRole supporterRole;
 		static SocketTextChannel supporterChannel;
 		static SocketTextChannel generalChannel;
 
-		public AccountService()
+		public AccountService(DiscordSocketClient client, TownDatabase database, AltaAPI altaApi, TimerService timer)
 		{
-			Timer.OnClockInterval += UpdateAll;
+			Client = client;
+			Database = database;
+			AltaApi = altaApi;
 
-			foreach (TownUser user in Database.Users.Find(item => item.AltaInfo != null))
+			timer.OnClockInterval += UpdateAll;
+
+			//Console.WriteLine(database.Users.Count(item => item.AltaInfo != null));
+
+			//Migrate();
+		}
+
+		void Migrate()
+		{
+			string target = "AltaLink.txt";
+
+			FileInfo fileInfo = new FileInfo($"./{target}");
+
+			if (!fileInfo.Exists)
 			{
-				UpdateAsync(user, null).Wait();
+				Console.WriteLine("Can't find AltaLinks");
+				return;
+			}
+
+			Console.WriteLine("Migrating with AltaLinks");
+
+
+
+			using (StreamReader reader = new StreamReader($"./{target}"))
+			{
+				while (!reader.EndOfStream)
+				{
+					string line = reader.ReadLine().Trim();
+					
+					string[] split = line.Split(' ');
+					
+					if (split.Length == 3)
+					{
+						ulong discord = ulong.Parse(split[0]);
+						string name = split[1];
+
+						if (!int.TryParse(split[2], out int id))
+						{
+							Console.WriteLine("Failed to parse id for " + line);
+							continue;
+						}
+
+						TownUser user = Database.Users.FindOne(item => item.UserId == discord);
+						
+						if (user == null)
+						{
+							Console.WriteLine("Couldn't find user " + discord + " for " + name);
+							continue;
+						}
+
+						if (user.AltaInfo != null)
+						{
+							//Console.WriteLine("Already processed " + line);
+							continue;
+						}
+
+						Console.WriteLine("Connecting " + user.Name + " to " + name);
+
+						user.AltaInfo = new UserAltaInfo()
+						{
+							Identifier = id,
+							Username = name
+						};
+
+						Database.Users.Update(user);
+
+						UpdateAsync(user, null).Wait();
+					}
+					else
+					{
+						Console.WriteLine("Length not 3 " + line);
+					}
+				}
 			}
 		}
 
 		async void UpdateAll(object sender, IServiceProvider e)
 		{
+			await UpdateAll();
+		}
+
+		public async Task UpdateAll(bool isForced = false)
+		{
 			DateTime time = DateTime.Now;
 
-			foreach (TownUser user in Database.Users.Find(item => item.AltaInfo != null && item.AltaInfo.SupporterExpiry < time))
+			foreach (TownUser user in Database.Users.Find(item => item.AltaInfo != null && (isForced || (item.AltaInfo.IsSupporter && item.AltaInfo.SupporterExpiry < time))))
 			{
 				await UpdateAsync(user, null);
+				await Task.Delay(20);
 			}
 		}
 
 		public async Task UpdateAsync(TownUser townUser, SocketGuildUser user)
 		{
+			if (guild == null)
+			{
+				guild = Client.GetGuild(Database.Guilds.FindOne(item => true).GuildId);
+			}
+						
 			try
 			{
 				UserInfo userInfo = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(townUser.AltaInfo.Identifier);
-
+				
 				MembershipStatusResponse result = await AltaApi.ApiClient.UserClient.GetMembershipStatus(townUser.AltaInfo.Identifier);
 
 				if (userInfo == null)
@@ -65,6 +150,7 @@ namespace TownCrier.Services
 				townUser.AltaInfo.IsSupporter = result.IsMember;
 				townUser.AltaInfo.Username = userInfo.Username;
 
+				Console.WriteLine("JUST UPDATED: " + userInfo.Username);
 
 				if (user == null)
 				{
@@ -103,8 +189,12 @@ namespace TownCrier.Services
 						await generalChannel.SendMessageAsync($"{user.Mention} became a supporter! Thanks for the support!\nIf you'd like to find out more about supporting, visit https://townshiptale.com/supporter");
 					}
 				}
-				else
+				else if (user.Roles != null && user.Roles.Contains(supporterRole))
 				{
+					Console.WriteLine("UNSUPPORT : " + user.Username);
+
+					await user.SendMessageAsync("Oh no! You've lost your supporter role! It's been great having you with us in #supporter-chat. If you didn't mean to unsupport, check the Support page in your launcher ( or https://townshiptale.com/supporter ) to be sure your payment didn't fail. If you think this was a mistake, be sure to contact Joel, and he'll help you out!");
+
 					await user.RemoveRoleAsync(supporterRole);
 				}
 

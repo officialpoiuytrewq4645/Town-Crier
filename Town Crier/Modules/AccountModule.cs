@@ -73,6 +73,33 @@ namespace TownCrier
 			}
 		}
 
+		[Command("listextra")]
+		[RequireUserPermission(GuildPermission.ManageGuild)]
+		public async Task ListExtra()
+		{
+			foreach (SocketGuildUser user in Context.Guild.GetRole(547202953505800233).Members)
+			{
+				TownUser entry = Database.GetUser(user);
+
+				if (entry.AltaInfo == null || !entry.AltaInfo.IsSupporter)
+				{
+					await ReplyAsync(user.Username + " " + (entry.AltaInfo == null));
+				}
+			}
+
+			await ReplyAsync("Done!");
+		}
+
+		[Command("forceall")]
+		[RequireUserPermission(GuildPermission.ManageGuild)]
+		public async Task ForceAll()
+		{
+			await Context.Guild.DownloadUsersAsync();
+
+			await ReplyAsync("Starting...");
+			await AccountService.UpdateAll(true);
+			await ReplyAsync("Done!");
+		}
 
 		[Command("update")]
 		public async Task Update()

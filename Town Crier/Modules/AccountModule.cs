@@ -188,12 +188,14 @@ namespace TownCrier
 			catch
 			{
 				await ReplyAsync(Context.User.Mention + ", " + "Invalid verification token.");
+				await Context.Message.DeleteAsync();
 				return;
 			}
 
 			if (userData == null || altaId == null)
 			{
 				await ReplyAsync(Context.User.Mention + ", " + "Invalid verification token.");
+				await Context.Message.DeleteAsync();
 			}
 			else
 			{
@@ -209,6 +211,7 @@ namespace TownCrier
 					if (test != expected.ToLower() && test != alternate.ToLower())
 					{
 						await ReplyAsync(Context.User.Mention + ", " + "Make sure you correctly entered your account info! You entered: " + result.discord + ". Expected: " + expected);
+						await Context.Message.DeleteAsync();
 						return;
 					}
 
@@ -226,6 +229,7 @@ namespace TownCrier
 						if (user.AltaInfo.Identifier == id)
 						{
 							await ReplyAsync(Context.User.Mention + ", " + "Already connected!");
+							await Context.Message.DeleteAsync();
 
 							await AccountService.UpdateAsync(user, (SocketGuildUser)Context.User);
 							return;
@@ -234,6 +238,7 @@ namespace TownCrier
 						if (user.AltaInfo.Identifier != 0)
 						{
 							await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Discord from {user.AltaInfo.Username}...");
+							await Context.Message.DeleteAsync();
 
 							user.AltaInfo.Unlink();
 						}
@@ -247,6 +252,7 @@ namespace TownCrier
 								var olddiscorduser = Context.Client.GetUser(x.UserId);
 
 								await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Alta account from {olddiscorduser.Mention}...");
+								await Context.Message.DeleteAsync();
 
 								x.AltaInfo.Unlink();
 							}
@@ -257,10 +263,12 @@ namespace TownCrier
 						await AccountService.UpdateAsync(user, (SocketGuildUser)Context.User);
 
 						await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaInfo.Username}!");
+						await Context.Message.DeleteAsync();
 					}
 					else
 					{
 						await ReplyAsync(Context.User.Mention + ", " + "Invalid token! Try creating a new one!");
+						await Context.Message.DeleteAsync();
 					}
 				}
 				catch (Exception e)

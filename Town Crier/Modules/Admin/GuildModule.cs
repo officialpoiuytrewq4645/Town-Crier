@@ -62,6 +62,28 @@ namespace TownCrier.Modules.Admin
 			}
 		}
 
+		[Command("wiki")]
+		public async Task Wiki()
+		{
+			TownGuild guild = Database.GetGuild(Context.Guild);
+
+			if (guild == null)
+			{
+				return;
+			}
+
+			await ReplyAsync("Editing wiki...\n" +
+				$"Please answer the following questions ('{SkipCharacter}' to skip / leave default)");
+
+			await AskString($"What is the url of the wiki?", guild.WikiUrl, value => guild.WikiUrl = value);
+			await AskString($"What is the name of the wiki?", guild.WikiName, value => guild.WikiName = value);
+			await AskString($"What is the icon of the wiki?", guild.WikiIcon, value => guild.WikiIcon = value);
+
+			Database.Guilds.Update(guild);
+
+			await ReplyAsync("All done!");
+		}
+
 		[Group("activity-role"), Alias("activityrole", "activity")]
 		public class ActivityRoleConfig : GuildModule
 		{

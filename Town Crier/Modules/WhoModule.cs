@@ -121,6 +121,7 @@ namespace DiscordBot.Modules
 
 			[Summary("Tells you who someone is")]
 			[Command]
+			[Priority(-1)]
 			public async Task IsCommand(string person)
 			{
 				TownUser user = Database.Users.FindOne(item => item.Name == person);

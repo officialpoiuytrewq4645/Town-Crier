@@ -112,7 +112,7 @@ namespace TownCrier.Database
 
 	public class ActivityRole
 	{
-		public ActivityType ActivityType { get; set; }
+		public ActivityFlag ActivityType { get; set; }
 		public string ActivityName { get; set; }
 		public ulong AssociatedRole { get; set; }
 	}

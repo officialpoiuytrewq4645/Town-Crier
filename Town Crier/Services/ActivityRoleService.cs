@@ -37,27 +37,40 @@ namespace TownCrier
 
 			this.client.GuildMemberUpdated += UserUpdated;
 
-			Ready();
+			this.client.GuildAvailable += Ready;
 		}
 
-		async void Ready()
+		async Task Ready(SocketGuild discordGuild)
 		{
-			foreach (TownGuild guild in database.Guilds.FindAll())
+			Console.WriteLine(discordGuild.Name + " is ready");
+
+			TownGuild guild = database.GetGuild(discordGuild);
+			
+			if (guild == null || guild.ActivityRoles.Count == 0)
 			{
-				if (guild.ActivityRoles.Count == 0)
-				{
-					continue;
-				}
-
-				SocketGuild discordGuild = client.GetGuild(guild.GuildId);
-
-				await discordGuild.DownloadUsersAsync();
-				
-				foreach (SocketGuildUser user in discordGuild.Users)
-				{
-					await UpdateRoles(null, user, guild);
-				}
+				return;
 			}
+
+			_  = Task.Run(async () =>
+			{
+				try
+				{
+					await discordGuild.DownloadUsersAsync();
+
+					foreach (SocketGuildUser user in discordGuild.Users)
+					{
+						Console.WriteLine("Update " + user.Username);
+						await UpdateRoles(null, user, guild);
+					}
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e);
+					Console.WriteLine(e.StackTrace);
+				}
+
+				Console.WriteLine("DONE!");
+			});
 		}
 
 		async Task UserUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
@@ -76,6 +89,7 @@ namespace TownCrier
 			if (oldUser == null || oldUser.Activity != null)
 			{
 				int activityFlag = oldUser == null ? 0 : 1 << (int)oldUser.Activity.Type;
+				int newActivityFlag = newUser.Activity == null ? 0 : (1 << (int)newUser.Activity.Type);
 
 				IEnumerable<ActivityRole> oldPotentialRoles = oldUser == null ? guild.ActivityRoles : guild.ActivityRoles.Where(x => ((int)x.ActivityType & activityFlag) != 0);
 
@@ -86,7 +100,7 @@ namespace TownCrier
 
 					if (role != null)
 					{
-						if (!Regex.IsMatch(newUser.Activity.Name, activity.ActivityName, RegexOptions.IgnoreCase))
+						if (newUser.Activity == null || ((int)activity.ActivityType & newActivityFlag) == 0 || !Regex.IsMatch(newUser.Activity.Name, activity.ActivityName, RegexOptions.IgnoreCase))
 						{
 							await newUser.RemoveRoleAsync(role);
 						}

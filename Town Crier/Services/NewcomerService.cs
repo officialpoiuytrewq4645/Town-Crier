@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using DiscordBot.Modules;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -35,6 +36,9 @@ namespace TownCrier.Services
 			{
 				// TextChannel where Notifications go
 				var NotificationChannel = user.Guild.GetTextChannel(guild.NotificationChannel);
+
+				//Not the most elegant, but can't afford to spend more time on it right now
+				await WelcomeModule.SendTo(user);
 
 				// Send welcome message, parsing the welcome message string from the TownGuild property
 				if (guild.WelcomeMessage != "")

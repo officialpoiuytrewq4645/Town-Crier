@@ -170,7 +170,7 @@ namespace TownCrier.Services
 					generalChannel = guild.GetChannel(334933825383563266) as SocketTextChannel;
 				}
 
-				if (townUser.AltaInfo.IsSupporter)
+				if (townUser.AltaInfo.IsSupporter && supporterRole != null && supporterChannel != null && generalChannel != null)
 				{
 					if (user.Roles == null || !user.Roles.Contains(supporterRole))
 					{

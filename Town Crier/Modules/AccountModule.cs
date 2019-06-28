@@ -203,7 +203,7 @@ namespace TownCrier
 				{
 					VerifyData result = JsonConvert.DeserializeObject<VerifyData>(userData.Value);
 
-					string test = result.discord.ToLower();
+					string test = result.discord.ToLower(); 
 					string expected = Context.User.Username.ToLower() + "#" + Context.User.Discriminator;
 					string alternate = Context.User.Username.ToLower() + " #" + Context.User.Discriminator;
 

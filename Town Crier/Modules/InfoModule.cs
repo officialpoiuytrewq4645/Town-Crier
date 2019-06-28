@@ -8,9 +8,47 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TownCrier.Database;
+using TownCrier.Services;
 
 namespace TownCrier.Modules
 {
+	public class PlaytimeModule : InteractiveBase<SocketCommandContext>
+	{
+		AltaAPI AltaAPI { get; set; }
+
+		public TownDatabase Database { get; set; }
+
+		public PlaytimeModule(AltaAPI altaAPI, TownDatabase database)
+		{
+			AltaAPI = altaAPI;
+			Database = database;
+		}
+
+		[Command("playtime")]
+		public async Task PlayTime()
+		{
+			await PlayTime2(Context.User);
+		}
+
+		[Command("playtime"), RequireUserPermission(GuildPermission.BanMembers)]
+		public async Task PlayTime2(IUser userArg)
+		{
+			TownUser user = Database.GetUser(userArg);
+
+			if (user == null || user.AltaInfo == null || user.AltaInfo.Identifier == 0)
+			{
+				await ReplyAsync(Context.User.Mention + ", " + "You have not linked to an Alta account! To link, visit the 'Account Settings' page in the launcher.");
+			}
+			else
+			{
+				var stats = await AltaAPI.ApiClient.UserClient.GetUserStatisticsAsync(user.AltaInfo.Identifier);
+
+				await ReplyAsync("Play time: " + stats.PlayTime.TotalHours.ToString("0.00") + " hours");
+			}
+		}
+	}
+
 	public class InfoModule : InteractiveBase<SocketCommandContext>
 	{
 		[Command("blog")]

@@ -335,4 +335,3 @@ namespace TownCrier
 		}
 	}
 }
-						await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaInfo.Username}!");

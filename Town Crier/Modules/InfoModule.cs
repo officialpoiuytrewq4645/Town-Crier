@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TownCrier.Database;
+using TownCrier.Services;
 
 namespace TownCrier.Modules
 {
@@ -373,5 +375,3 @@ namespace TownCrier.Modules
 
 	}
 }
-using TownCrier.Database;
-using TownCrier.Services;

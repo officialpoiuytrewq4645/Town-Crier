@@ -262,7 +262,7 @@ namespace TownCrier
 				{
 					VerifyData result = JsonConvert.DeserializeObject<VerifyData>(userData.Value);
 
-					string test = result.discord.ToLower();
+					string test = result.discord.ToLower(); 
 					string expected = Context.User.Username.ToLower() + "#" + Context.User.Discriminator;
 					string alternate = Context.User.Username.ToLower() + " #" + Context.User.Discriminator;
 
@@ -282,6 +282,42 @@ namespace TownCrier
 					{
 						await Link(Context.User, user, id);
 
+						if (user.AltaInfo.Identifier == id)
+						{
+							await ReplyAsync(Context.User.Mention + ", " + "Already connected!");
+							await Context.Message.DeleteAsync();
+
+							await AccountService.UpdateAsync(user, (SocketGuildUser)Context.User);
+							return;
+						}
+
+						if (user.AltaInfo.Identifier != 0)
+						{
+							await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Discord from {user.AltaInfo.Username}...");
+							await Context.Message.DeleteAsync();
+
+							user.AltaInfo.Unlink();
+						}
+
+						if (Database.Users.Exists(x => x.AltaInfo != null && x.AltaInfo.Identifier == id && x.UserId != Context.User.Id))
+						{
+							var oldUsers = Database.Users.Find(x => x.AltaInfo.Identifier == id && x.UserId != Context.User.Id);
+
+							foreach (var x in oldUsers)
+							{
+								var olddiscorduser = Context.Client.GetUser(x.UserId);
+
+								await ReplyAsync(Context.User.Mention + ", " + $"Unlinking your Alta account from {olddiscorduser.Mention}...");
+								await Context.Message.DeleteAsync();
+
+								x.AltaInfo.Unlink();
+							}
+						}
+
+						user.AltaInfo.Identifier = id;
+						
+						await AccountService.UpdateAsync(user, (SocketGuildUser)Context.User);
+
 						await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaInfo.Username}!");
 						await Context.Message.DeleteAsync();
 					}
@@ -299,3 +335,4 @@ namespace TownCrier
 		}
 	}
 }
+						await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaInfo.Username}!");

@@ -114,6 +114,28 @@ namespace TownCrier.Services
 		{
 			DateTime time = DateTime.Now;
 
+			if (guild == null)
+			{
+				guild = Client.GetGuild(Database.Guilds.FindOne(item => true).GuildId);
+			}
+
+			if (supporterRole == null)
+			{
+				supporterRole = guild.GetRole(547202953505800233);
+				supporterChannel = guild.GetTextChannel(547204432144891907);
+				generalChannel = guild.GetChannel(334933825383563266) as SocketTextChannel;
+			}
+
+			//foreach (SocketGuildUser user in supporterRole.Members)
+			//{
+			//	TownUser entry = Database.GetUser(user);
+
+			//	if (entry.AltaInfo == null || !entry.AltaInfo.IsSupporter)
+			//	{
+			//		await UpdateAsync(entry, user);
+			//	}
+			//}
+
 			foreach (TownUser user in Database.Users.Find(item => item.AltaInfo != null && (isForced || (item.AltaInfo.IsSupporter && item.AltaInfo.SupporterExpiry < time))))
 			{
 				await UpdateAsync(user, null);
@@ -130,47 +152,50 @@ namespace TownCrier.Services
 						
 			try
 			{
-				UserInfo userInfo = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(townUser.AltaInfo.Identifier);
-				
-				MembershipStatusResponse result = await AltaApi.ApiClient.UserClient.GetMembershipStatus(townUser.AltaInfo.Identifier);
-
-				if (userInfo == null)
+				if (townUser.AltaInfo != null)
 				{
-					Console.WriteLine("Couldn't find userinfo for " + townUser.Name);
-					return;
+					UserInfo userInfo = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(townUser.AltaInfo.Identifier);
+
+					MembershipStatusResponse result = await AltaApi.ApiClient.UserClient.GetMembershipStatus(townUser.AltaInfo.Identifier);
+
+					if (userInfo == null)
+					{
+						Console.WriteLine("Couldn't find userinfo for " + townUser.Name);
+						return;
+					}
+
+					if (result == null)
+					{
+						Console.WriteLine("Couldn't find membership status for " + townUser.Name);
+						return;
+					}
+
+					townUser.AltaInfo.SupporterExpiry = result.ExpiryTime ?? DateTime.MinValue;
+					townUser.AltaInfo.IsSupporter = result.IsMember;
+					townUser.AltaInfo.Username = userInfo.Username;
+
+					Console.WriteLine("JUST UPDATED: " + userInfo.Username);
+
+					if (user == null)
+					{
+						user = guild.GetUser(townUser.UserId);
+					}
+
+					if (user == null)
+					{
+						Console.WriteLine("Couldn't find Discord user for " + townUser.Name + " " + townUser.UserId);
+						return;
+					}
+
+					if (supporterRole == null)
+					{
+						supporterRole = guild.GetRole(547202953505800233);
+						supporterChannel = guild.GetTextChannel(547204432144891907);
+						generalChannel = guild.GetChannel(334933825383563266) as SocketTextChannel;
+					}
 				}
 
-				if (result == null)
-				{
-					Console.WriteLine("Couldn't find membership status for " + townUser.Name);
-					return;
-				}
-
-				townUser.AltaInfo.SupporterExpiry = result.ExpiryTime ?? DateTime.MinValue;
-				townUser.AltaInfo.IsSupporter = result.IsMember;
-				townUser.AltaInfo.Username = userInfo.Username;
-
-				Console.WriteLine("JUST UPDATED: " + userInfo.Username);
-
-				if (user == null)
-				{
-					user = guild.GetUser(townUser.UserId);
-				}
-
-				if (user == null)
-				{
-					Console.WriteLine("Couldn't find Discord user for " + townUser.Name + " " + townUser.UserId);
-					return;
-				}
-
-				if (supporterRole == null)
-				{
-					supporterRole = guild.GetRole(547202953505800233);
-					supporterChannel = guild.GetTextChannel(547204432144891907);
-					generalChannel = guild.GetChannel(334933825383563266) as SocketTextChannel;
-				}
-
-				if (townUser.AltaInfo.IsSupporter)
+				if (townUser.AltaInfo != null && townUser.AltaInfo.IsSupporter)
 				{
 					if (user.Roles == null || !user.Roles.Contains(supporterRole))
 					{
@@ -185,8 +210,11 @@ namespace TownCrier.Services
 							Console.WriteLine(supporterRole);
 						}
 
-						await supporterChannel.SendMessageAsync($"{user.Mention} joined. Thanks for the support!");
-						await generalChannel.SendMessageAsync($"{user.Mention} became a supporter! Thanks for the support!\nIf you'd like to find out more about supporting, visit https://townshiptale.com/supporter");
+						if (user.Roles != null)
+						{
+							await supporterChannel.SendMessageAsync($"{user.Mention} joined. Thanks for the support!");
+							await generalChannel.SendMessageAsync($"{user.Mention} became a supporter! Thanks for the support!\nIf you'd like to find out more about supporting, visit https://townshiptale.com/supporter");
+						}
 					}
 				}
 				else if (user.Roles != null && user.Roles.Contains(supporterRole))

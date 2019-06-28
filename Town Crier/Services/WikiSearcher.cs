@@ -226,9 +226,9 @@ namespace TownCrier.Services
 					{
 						description = "Page not found";
 
-						string pageUrl = url + "/" + item.Replace(" ", "_");
+						url += "/" + item.Replace(" ", "_");
 
-						description += $"\n[Click here to create it!]({pageUrl})";
+						description += $"\n[Click here to create it!]({url})";
 					}
 					else
 					{
@@ -264,7 +264,7 @@ namespace TownCrier.Services
 					}
 					else
 					{
-						string pageUrl = url + "/" + item.Replace(" ", "_");
+						url += "/" + item.Replace(" ", "_");
 
 						int startSearch = 0;
 

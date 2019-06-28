@@ -2,17 +2,23 @@
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Discord.WebSocket;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using TownCrier.Database;
+using TownCrier.Services;
 
 namespace TownCrier.Modules
 {
 	public class InfoModule : InteractiveBase<SocketCommandContext>
 	{
+		public TownDatabase Database { get; set;  }
+
 		[Command("blog")]
 		public Task Info()
 			=> ReplyAsync(
@@ -117,31 +123,21 @@ namespace TownCrier.Modules
 			}
 		}
 
-		//[Command("joined")]
-		//public async Task Joined()
-		//{
-		//	Player player = Context.Guild.GetUser(Conte);
+		[Command("joined")]
+		public async Task Joined()
+		{
+			TownUser user = Database.GetUser(Context.User);
+			
+			await ReplyAsync($"{Context.User.Mention} joined on {user.InitialJoin.ToString("dd/MMM/yyyy")}");
+		}
 
-		//	if (player.joined == default(DateTime))
-		//	{
-		//		player.joined = (Context.User as IGuildUser).JoinedAt.Value.UtcDateTime;
-		//	}
+		[Command("joined"), RequireUserPermission(GuildPermission.KickMembers)]
+		public async Task Joined(IUser discordUser)
+		{
+			TownUser user = Database.GetUser(discordUser);
 
-		//	await ReplyAsync($"{Context.User.Mention} joined on {player.joined.ToString("dd/MMM/yyyy")}");
-		//}
-
-		//[Command("joined"), RequireAdmin]
-		//public async Task Joined(IUser user)
-		//{
-		//	Player player = GetPlayer(user);
-
-		//	if (player.joined == default(DateTime))
-		//	{
-		//		player.joined = (user as IGuildUser).JoinedAt.Value.UtcDateTime;
-		//	}
-
-		//	await ReplyAsync($"{user.Username} joined on {player.joined.ToString("dd/MMM/yyyy")}");
-		//}
+			await ReplyAsync($"{discordUser.Username} joined on {user.InitialJoin.ToString("dd/MMM/yyyy")}");
+		}
 
 
 		[Command("title"), Alias("heading", "header")]
@@ -156,61 +152,59 @@ namespace TownCrier.Modules
 				await response.DeleteAsync();
 			});
 		}
-		
-		//[Command("userlist")]
-		//public async Task UserList()
-		//{
-		//	if (Context.Guild == null)
-		//	{
-		//		return;
-		//	}
 
-		//	if (!(Context.User as IGuildUser).RoleIds.Contains<ulong>(334935631149137920))
-		//	{
-		//		return;
-		//	}
+		[Command("userlist")]
+		public async Task UserList()
+		{
+			if (Context.Guild == null)
+			{
+				return;
+			}
 
-		//	await ReplyAsync("Starting...");
+			if (!(Context.User as IGuildUser).RoleIds.Contains<ulong>(334935631149137920))
+			{
+				return;
+			}
 
-		//	StringBuilder result = new StringBuilder();
+			await ReplyAsync("Starting...");
 
-		//	result
-		//		.Append("ID")
-		//		.Append(',')
-		//		.Append("Username")
-		//		.Append(',')
-		//		.Append("Nickname")
-		//		.Append(',')
-		//		.Append("Joined")
-		//		.Append(',')
-		//		.Append("Last Message")
-		//		.Append(',')
-		//		.Append("Score")
-		//		.Append('\n');
+			StringBuilder result = new StringBuilder();
 
-		//	foreach (IGuildUser user in (Context.Guild as SocketGuild).Users)
-		//	{
-		//		Player player = ChatCraft.Instance.GetExistingPlayer(user);
+			result
+				.Append("ID")
+				.Append(',')
+				.Append("Username")
+				.Append(',')
+				.Append("Nickname")
+				.Append(',')
+				.Append("Joined")
+				.Append(',')
+				.Append("Last Message")
+				.Append(',')
+				.Append("Score")
+				.Append('\n');
 
-		//		result
-		//			.Append(user.Id)
-		//			.Append(',')
-		//			.Append(user.Username.Replace(',', '_'))
-		//			.Append(',')
-		//			.Append(user.Nickname?.Replace(',', '_'))
-		//			.Append(',')
-		//			.Append(user.JoinedAt?.ToString("dd-MM-yy"))
-		//			.Append(',')
-		//			.Append(player?.lastMessage.ToString("dd-MM-yy"))
-		//			.Append(',')
-		//			.Append(player?.score)
-		//			.Append('\n');
-		//	}
+			foreach (IGuildUser user in (Context.Guild as SocketGuild).Users)
+			{
+				TownUser townUser = Database.GetUser(user);
 
-		//	System.IO.File.WriteAllText("D:/Output/Join Dates.txt", result.ToString());
+				result
+					.Append(user.Id)
+					.Append(',')
+					.Append(user.Username.Replace(',', '_'))
+					.Append(',')
+					.Append(user.Nickname?.Replace(',', '_'))
+					.Append(',')
+					.Append(townUser.InitialJoin.ToString("dd-MM-yy"))
+					.Append(',')
+					.Append(townUser.Scoring?.LastMessage.ToString("dd-MM-yy"))
+					.Append('\n');
+			}
 
-		//	await ReplyAsync("I'm done now :)");
-		//}
+			System.IO.File.WriteAllText("D:/Output/Join Dates.txt", result.ToString());
+
+			await ReplyAsync("I'm done now :)");
+		}
 
 		[Command("alerton")]
 		public async Task AlertOn()

@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using LiteDB;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,8 @@ namespace TownCrier.Services
 		{
 			TownUser result = Users.FindOne(x => x.UserId == user.Id);
 
+			bool isChanged = false;
+
 			if (result == null)
 			{
 				result = new TownUser() { UserId = user.Id, Name = user.Username };
@@ -43,6 +46,18 @@ namespace TownCrier.Services
 			{
 				result.Name = user.Username;
 
+				isChanged = true;
+			}
+
+			if (result.InitialJoin == default(DateTime) && user is IGuildUser guildUser && guildUser.JoinedAt.HasValue)
+			{
+				result.InitialJoin = guildUser.JoinedAt.Value.UtcDateTime;
+
+				isChanged = true;
+			}
+
+			if (isChanged)
+			{
 				Users.Update(result);
 			}
 

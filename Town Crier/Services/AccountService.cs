@@ -151,11 +151,13 @@ namespace TownCrier.Services
 					return;
 				}
 
-				if (townUser.AltaInfo != null && townUser.AltaInfo.IsSupporter)
-				{
-					Console.WriteLine("Couldn't find membership status for " + townUser.Name);
-					return;
-				}
+				//if (townUser.AltaInfo != null && townUser.AltaInfo.IsSupporter)
+				//{
+				//	Console.WriteLine("Couldn't find membership status for " + townUser.Name);
+				//	return;
+				//}
+
+				bool wasSupporter = townUser.AltaInfo.IsSupporter;
 
 				townUser.AltaInfo.SupporterExpiry = result.ExpiryTime ?? DateTime.MinValue;
 				townUser.AltaInfo.IsSupporter = result.IsMember;
@@ -196,14 +198,14 @@ namespace TownCrier.Services
 							Console.WriteLine(supporterRole);
 						}
 
-						if (user.Roles != null)
+						if (!wasSupporter)
 						{
 							await supporterChannel.SendMessageAsync($"{user.Mention} joined. Thanks for the support!");
 							await generalChannel.SendMessageAsync($"{user.Mention} became a supporter! Thanks for the support!\nIf you'd like to find out more about supporting, visit https://townshiptale.com/supporter");
 						}
 					}
 				}
-				else if (user.Roles != null && user.Roles.Contains(supporterRole))
+				else if (wasSupporter)
 				{
 					Console.WriteLine("UNSUPPORT : " + user.Username);
 

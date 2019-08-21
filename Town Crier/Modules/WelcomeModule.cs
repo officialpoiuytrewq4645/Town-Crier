@@ -51,7 +51,7 @@ namespace DiscordBot.Modules
 						});
 
 			yield return GetEmbed("Can I support the game?",
-						"Your feedback is extremely helpful!\nCheck out the [#feedback](https://discord.gg/shDqSPe), [#bugs](https://discord.gg/wDZyymr), and [#ideas](https://discord.gg/YHumMYu) channels!\n\nIf you would like to support financially, you can check out the cosmetic store (in the Alta Launcher) and/or [become a supporter](https://townshiptale.com/supporter)!",
+						"Your feedback is extremely helpful!\nCheck out the [Feedback Forum](https://feedback.townshiptale.com), and the [#fbi-discussion](https://discord.gg/eWsbcXb) channel!\n\nIf you would like to support financially, you can check out the cosmetic store (in the Alta Launcher) and/or [become a supporter](https://townshiptale.com/supporter)!",
 						"",
 						false,
 						new Color(0xC9881E));
@@ -64,6 +64,7 @@ namespace DiscordBot.Modules
 						builder =>
 						{
 							builder.WithFields(
+								new EmbedFieldBuilder().WithName("Feedback").WithValue("https://feedback.townshiptale.com").WithIsInline(true),
 								new EmbedFieldBuilder().WithName("FAQ").WithValue("https://trello.com/b/Dnaxu0Mk/a-township-tale-faq-help").WithIsInline(true),
 								new EmbedFieldBuilder().WithName("Roadmap").WithValue("https://trello.com/b/0rQGM8l4/a-township-tales-roadmap").WithIsInline(true),
 								new EmbedFieldBuilder().WithName("Wiki").WithValue("https://townshiptale.gamepedia.com/A_Township_Tale_Wiki").WithIsInline(true),

@@ -85,6 +85,11 @@ namespace TownCrier.Modules
 			=> ReplyAsync(
 				$"Were you looking for this?\nhttps://townshiptale.com/launcher\n");
 
+		[Command("feedback"), Alias("bugs", "fbi", "ideas")]
+		public Task Feedback()
+			=> ReplyAsync(
+				$"Were you looking for this?\nhttps://feedback.townshiptale.com\n");
+
 
 		[Command("supporter"), Alias("support", "donate")]
 		public Task Supporter()

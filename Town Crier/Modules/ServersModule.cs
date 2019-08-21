@@ -35,9 +35,9 @@ namespace TownCrier.Modules
 
 			servers = servers.OrderBy(item => item.Name);
 
-			string result = servers.ToStringTable(OnlineTableHeaders, server => server.Name, server => (Map)server.SceneIndex, server => server.OnlinePlayers.Count);
+			string result = servers.ToStringTable(OnlineTableHeaders, server => server.Name, server => (Map)server.SceneIndex, server => server.OnlinePlayers.Count());
 
-			int total = servers.Sum(item => item.OnlinePlayers.Count);
+			int total = servers.Sum(item => item.OnlinePlayers.Count());
 
 			await ReplyAsync("```" + result + $"\nTotal Players: {total}```");
 		}
@@ -53,10 +53,10 @@ namespace TownCrier.Modules
 			
 			foreach (GameServerInfo info in servers)
 			{
-				builder.AddField(info.Name, info.OnlinePlayers.Count, true);
+				builder.AddField(info.Name, info.OnlinePlayers.Count(), true);
 			}
 
-			int total = servers.Sum(item => item.OnlinePlayers.Count);
+			int total = servers.Sum(item => item.OnlinePlayers.Count());
 
 			builder.AddField("Total Players", total, false);
 
@@ -94,7 +94,7 @@ namespace TownCrier.Modules
 
 					tempBuilder.AddField("Name", server.Name);
 					tempBuilder.AddField("Type", (Map)server.SceneIndex);
-					tempBuilder.AddField("Players", server.OnlinePlayers.Count);
+					tempBuilder.AddField("Players", server.OnlinePlayers.Count());
 					
 					foreach (UserInfo user in server.OnlinePlayers)
 					{

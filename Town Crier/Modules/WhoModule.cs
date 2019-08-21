@@ -87,10 +87,10 @@ namespace DiscordBot.Modules
 			[Command("serena"), Alias("Sbanana")]
 			public async Task Serena() => await ReplyAsync("Serena is the Technical Artist of the game. She ups the prettiness, and downs the lagginess.");
 
-			[Command("sol")]
+			[Command("sol"), Alias("eric")]
 			public async Task Sol() => await ReplyAsync("Sol is the wielder of the ban hammer. He is here to help, be awesome, and kick you if you spam :)");
 
-			[Command("lefnire")]
+			[Command("lefnire"), Alias("tyler")]
 			public async Task Lefnire() => await ReplyAsync("Lefnire is a web and server guru. He's helping keep an eye on the servers, and find problems with the game!");
 
 			[Command("ozball")]
@@ -100,7 +100,7 @@ namespace DiscordBot.Modules
 			public async Task TownCrier() => await ReplyAsync("I'm the trustworthy Town Crier! Some may find me annoying, but I swear, I'm here to help!");
 
 			[Command("alta"), Alias("company", "team", "developer")]
-			public async Task Alta() => await ReplyAsync("Alta is a VR game development studio based in Sydney! We are (surprise, surprise) working on A Township Tale.\n Our extended team consists of:\nTima, Boramy, Joel, Timo, Victor, Serena, Sol, and myself (Town Crier).");
+			public async Task Alta() => await ReplyAsync("Alta is a VR game development studio based in Sydney! We are (surprise, surprise) working on A Township Tale. The team consists of me (most importantly), and several others. You can see their names in orange or yellow.");
 
 			static readonly string[] UnknownReplies = new string[]
 			{

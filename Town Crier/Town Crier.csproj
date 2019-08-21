@@ -267,8 +267,10 @@
     <Compile Include="Modules\Admin\GuildModule.cs" />
     <Compile Include="Modules\MiniGames.cs" />
     <Compile Include="Modules\ServersModule.cs" />
+    <Compile Include="Modules\WelcomeModule.cs" />
     <Compile Include="Modules\WhoModule.cs" />
     <Compile Include="Services\AccountService.cs" />
+    <Compile Include="Services\AltaProtocolService.cs" />
     <Compile Include="Services\CrossAlerter.cs" />
     <Compile Include="Modules\InfoModule.cs" />
     <Compile Include="Modules\JiraReporter.cs" />
@@ -289,16 +291,16 @@
     <Compile Include="Services\CommandHandlingService.cs" />
     <Compile Include="Services\TimerService.cs" />
     <Compile Include="Services\TownDatabase.cs" />
+    <Compile Include="Utility\TableParserExtensions.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>powershell start-process TownCrier.exe</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>start taskkill /F /IM discordbot.exe /T</PreBuildEvent>
+    <PreBuildEvent>start taskkill /F /IM TownCrier.exe /T</PreBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -24,13 +24,14 @@ namespace TownCrier.Services
 				[JsonProperty("*")]
 				public string value;
 			}
-
+			
 			public string title;
 			public int pageId;
 			public int revId;
 			public Text text;
 			public string displayTitle;
 			public string[] images;
+			public Text[] categories;
 		}
 	}
 
@@ -200,11 +201,14 @@ namespace TownCrier.Services
 			return result;
 		}
 
-		async Task GetWikiDescription(string url, string item, EmbedBuilder builder, bool isFixing = true)
+		async Task GetWikiDescription(string baseUrl, string item, EmbedBuilder builder, bool isFixing = true)
 		{
+			string targetUrl = baseUrl;
 			string[] split = item.Split('#');
 
 			item = split[0];
+
+			string categories = null;
 
 			using (HttpClient httpClient = new HttpClient())
 			{
@@ -212,7 +216,7 @@ namespace TownCrier.Services
 
 				if (isFixing)
 				{
-					HttpResponseMessage apiSearch = await httpClient.GetAsync(url + "/api.php?action=opensearch&profile=fuzzy&redirects=resolve&search=" + item);
+					HttpResponseMessage apiSearch = await httpClient.GetAsync(baseUrl + "/api.php?action=opensearch&profile=fuzzy&redirects=resolve&search=" + item);
 
 					//Format of result is really weird (array of mismatched types).
 					//Adding in square brackets to make first item a string array (rather than just string)
@@ -226,9 +230,9 @@ namespace TownCrier.Services
 					{
 						description = "Page not found";
 
-						string pageUrl = url + "/" + item.Replace(" ", "_");
+						targetUrl += "/" + item.Replace(" ", "_");
 
-						description += $"\n[Click here to create it!]({pageUrl})";
+						description += $"\n[Click here to create it!]({targetUrl})";
 					}
 					else
 					{
@@ -238,7 +242,7 @@ namespace TownCrier.Services
 
 				if (description == null)
 				{
-					HttpResponseMessage apiResponseText = await httpClient.GetAsync("https://townshiptale.gamepedia.com/api.php?format=json&action=parse&page=" + item);
+					HttpResponseMessage apiResponseText = await httpClient.GetAsync(baseUrl + "/api.php?format=json&action=parse&page=" + item);
 
 					ApiResponse apiResponse = null;
 
@@ -258,13 +262,13 @@ namespace TownCrier.Services
 					{
 						if (!isFixing)
 						{
-							await GetWikiDescription(url, item, builder, true);
+							await GetWikiDescription(baseUrl, item, builder, true);
 							return;
 						}
 					}
 					else
 					{
-						string pageUrl = url + "/" + item.Replace(" ", "_");
+						targetUrl += "/" + item.Replace(" ", "_");
 
 						int startSearch = 0;
 
@@ -294,7 +298,7 @@ namespace TownCrier.Services
 								}
 							}
 
-							url += '#' + split[1];
+							targetUrl += '#' + split[1];
 						}
 
 						int start = apiResponse.parse.text.value.IndexOf("<p>", startSearch);
@@ -313,7 +317,7 @@ namespace TownCrier.Services
 									continue;
 								}
 
-								HttpResponseMessage imageResponse = await httpClient.GetAsync("https://townshiptale.gamepedia.com/api.php?action=query&prop=imageinfo&format=json&iiprop=url&titles=File:" + apiResponse.parse.images[i]);
+								HttpResponseMessage imageResponse = await httpClient.GetAsync(baseUrl + "/api.php?action=query&prop=imageinfo&format=json&iiprop=url&titles=File:" + apiResponse.parse.images[i]);
 
 								string text = imageResponse.Content.ReadAsStringAsync().Result;
 
@@ -343,7 +347,7 @@ namespace TownCrier.Services
 								.Replace("</b>", "**")
 								.Trim();
 
-								description = Regex.Replace(description, item + "s?", match => $"[{match.Value}]({url})");
+								description = Regex.Replace(description, item + "s?", match => $"[{match.Value}]({targetUrl})");
 
 								RemoveHtml(ref description);
 							}
@@ -354,11 +358,33 @@ namespace TownCrier.Services
 							description = "No description found";
 						}
 
-						description += $"\n[Click here for more info]({url})";
+						description += $"\n[Click here for more info]({targetUrl})";
+					}
+
+					if (apiResponse.parse.categories.Length > 0)
+					{
+						categories += "";
+
+						for (int i = 0; i < apiResponse.parse.categories.Length; i++)
+						{
+							string value = apiResponse.parse.categories[i].value;
+
+							categories += $"[{value}]({baseUrl}/Category:{value})";
+
+							if (i + 1 < apiResponse.parse.categories.Length)
+							{
+								categories += ", ";
+							}
+						}
 					}
 				}
-
+				
 				builder.AddField(item, description);
+
+				if (categories != null)
+				{
+					builder.AddField("Categories", categories);
+				}
 			};
 		}
 

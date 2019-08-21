@@ -35,6 +35,7 @@ namespace TownCrier
 
 			services.GetRequiredService<OutOfOffice>();
 			services.GetRequiredService<NewcomerService>();
+			services.GetRequiredService<AltaProtocolService>();
 			services.GetRequiredService<DoYouCare>();
 			services.GetRequiredService<CrossAlerter>();
 			services.GetRequiredService<PointCounter>();
@@ -76,6 +77,7 @@ namespace TownCrier
 				.AddSingleton<TownDatabase>()
 				// Initializes AltaAPIService
 				.AddSingleton<AltaAPI>()
+				.AddSingleton<AltaProtocolService>()
 				.AddSingleton<AccountService>()
 				// Initializes other functionality
 				.AddSingleton<ChannelFilters>()

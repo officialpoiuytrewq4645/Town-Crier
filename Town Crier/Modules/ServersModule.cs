@@ -1,12 +1,15 @@
 ﻿using Alta.WebApi.Models;
 using Alta.WebApi.Models.DTOs.Responses;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Discord.WebSocket;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using TableParser;
 using TownCrier.Services;
 
 namespace TownCrier.Modules
@@ -23,28 +26,44 @@ namespace TownCrier.Modules
 			TestZone
 		}
 
-		[Command(), Alias("online")]
+		static readonly string[] OnlineTableHeaders = new string[] { "Name", "Type", "Players" };
+
+		[Command("t"), Alias("table")]
+		public async Task Table()
+		{
+			IEnumerable<GameServerInfo> servers = await AltaApi.ApiClient.ServerClient.GetOnlineServersAsync();
+
+			servers = servers.OrderBy(item => item.Name);
+
+			string result = servers.ToStringTable(OnlineTableHeaders, server => server.Name, server => (Map)server.SceneIndex, server => server.OnlinePlayers.Count);
+
+			int total = servers.Sum(item => item.OnlinePlayers.Count);
+
+			await ReplyAsync("```" + result + $"\nTotal Players: {total}```");
+		}
+
+		[Command()]
 		public async Task Online()
 		{
 			IEnumerable<GameServerInfo> servers = await AltaApi.ApiClient.ServerClient.GetOnlineServersAsync();
 
-			StringBuilder response = new StringBuilder();
+			servers = servers.OrderBy(item => item.Name);
 
-			response.AppendLine("The following servers are online:");
-
-			foreach (GameServerInfo server in servers)
+			EmbedBuilder builder = new EmbedBuilder();
+			
+			foreach (GameServerInfo info in servers)
 			{
-				response.AppendFormat("{0} - {3} - {1} player{2} online\n",
-					server.Name,
-					server.OnlinePlayers.Count,
-					server.OnlinePlayers.Count == 1 ? "" : "s",
-					(Map)server.SceneIndex);
+				builder.AddField(info.Name, info.OnlinePlayers.Count, true);
 			}
 
-			await ReplyAsync(response.ToString());
+			int total = servers.Sum(item => item.OnlinePlayers.Count);
+
+			builder.AddField("Total Players", total, false);
+
+			await ReplyAsync("", embed: builder.Build());
 		}
 
-		[Command("players"), Alias("player", "p")]
+		[Command("info"), Alias("player", "p", "i", "players")]
 		public async Task Players([Remainder]string serverName)
 		{
 			serverName = serverName.ToLower();
@@ -61,29 +80,33 @@ namespace TownCrier.Modules
 
 				if (Regex.Match(server.Name, @"\b" + serverName + @"\b", RegexOptions.IgnoreCase).Success)
 				{
+					SocketGuildUser guildUser = Context.User as SocketGuildUser;
+
+					if ((guildUser == null || !guildUser.GuildPermissions.ManageChannels) && Regex.Match(server.Name, "pvp", RegexOptions.IgnoreCase).Success)
+					{
+						await ReplyAsync("PvP Player List is disabled");
+						return;
+					}
+
 					response.Clear();
+					
+					EmbedBuilder tempBuilder = new EmbedBuilder();
 
-					if (server.OnlinePlayers.Count > 1)
+					tempBuilder.AddField("Name", server.Name);
+					tempBuilder.AddField("Type", (Map)server.SceneIndex);
+					tempBuilder.AddField("Players", server.OnlinePlayers.Count);
+					
+					foreach (UserInfo user in server.OnlinePlayers)
 					{
-						response.AppendFormat("These players are online on {0}\n", server.Name);
+						MembershipStatusResponse membershipResponse = await AltaApi.ApiClient.UserClient.GetMembershipStatus(user.Identifier);
 
-						foreach (UserInfo user in server.OnlinePlayers)
-						{
-							MembershipStatusResponse membershipResponse = await AltaApi.ApiClient.UserClient.GetMembershipStatus(user.Identifier);
-
-							response.AppendFormat("- {1}{0}\n", user.Username, membershipResponse.IsMember ? "<:Supporter:547252984481054733> " : "");
-						}
-					}
-					else if (server.OnlinePlayers.Count == 1)
-					{
-						response.AppendFormat("Only {0} is on {1}", server.OnlinePlayers.First().Username, server.Name);
-					}
-					else
-					{
-						response.AppendFormat("Nobody is on {0}", server.Name);
+						response.AppendFormat("- {1}{0}\n", user.Username, membershipResponse.IsMember ? "<:Supporter:547252984481054733> " : "");
 					}
 
-					break;
+					tempBuilder.WithDescription(response.ToString());
+					await ReplyAsync("", embed: tempBuilder.Build());
+
+					return;
 				}
 			}
 

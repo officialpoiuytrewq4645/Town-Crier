@@ -13,6 +13,16 @@ using TownCrier.Services;
 
 namespace TownCrier.Modules.Admin
 {
+	[Group("send"), RequireUserPermission(Discord.GuildPermission.ManageGuild)]
+	public class SendModule : InteractiveBase<SocketCommandContext>
+	{
+		[Command()]
+		public async Task Send(ITextChannel channel, [Remainder]string message)
+		{
+			await channel.SendMessageAsync(message);
+		}
+	}
+
 	[Group("guild"), RequireUserPermission(Discord.GuildPermission.ManageGuild)]
 	public class GuildModule : InteractiveBase<SocketCommandContext>
 	{

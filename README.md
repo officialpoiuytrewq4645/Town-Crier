@@ -44,17 +44,20 @@ Random other information:
   "BugIssueType": "1", 
   "UserStory": "7", 
   "CustomFieldId": "0" 
-}```
+}
+```
 
 
 **Setup Guide:**
 1. Create a file called 'config.json' next to the executable. 
 2. Fill out the file with the following info:
-```{
+```json
+{
 	"token" : <YOUR DISCORD BOT TOKEN (https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token)>,
 	"status": <STATUS THAT WILL APPEAR IN DISCORD>,
 	"timerInterval" : <INTERVAL IN MS TO UPDATE VARIOUS THINGS (5000 is a good default)> 
-}```
+}
+```
 4. Create file called `account.txt` next to the executable
 5. Fill out the file with the following info (this will be the Alta Login the Bot will use)
 ```

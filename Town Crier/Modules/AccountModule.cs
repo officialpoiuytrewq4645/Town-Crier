@@ -57,12 +57,28 @@ namespace TownCrier
 
 		// NOTE: Both of these commands will be tied to a global clock that will periodically update all accounts every 15~30 mins.
 
+		[Command("who-reverse")]
+		[RequireUserPermission(GuildPermission.ManageGuild)]
+		public async Task WhoReverse(IUser user)
+		{
+			TownUser entry = Database.GetUser(user);
+
+			if (entry.AltaInfo != null)
+			{
+				await ReplyAsync(entry.Name + " is " + entry.AltaInfo.Username);
+			}
+			else
+			{
+				await ReplyAsync(entry.Name + " hasnt linked their alta account");
+			}
+		}
+
 		[Command("who")]
 		[RequireUserPermission(GuildPermission.ManageGuild)]
 		public async Task Who(string username)
 		{
 			TownUser entry = Database.Users.FindOne(item => item.AltaInfo != null && string.Compare(item.AltaInfo.Username, username, true) == 0);
-			
+
 			if (entry != null)
 			{
 				await ReplyAsync(username + " is " + entry.Name);
@@ -79,19 +95,19 @@ namespace TownCrier
 		{
 			TownUser entry = Database.GetUser(user);
 
-			await Link(user, entry, altaId);
+			await Link(user, entry, altaId, null);
 
 			await ReplyAsync("Done!");
 		}
 
-		async Task Link(IUser discordUser, TownUser user, int id)
+		async Task Link(IUser discordUser, TownUser user, int altaId, string linkToken)
 		{
 			if (user.AltaInfo == null)
 			{
 				user.AltaInfo = new UserAltaInfo();
 			}
 
-			if (user.AltaInfo.Identifier == id)
+			if (user.AltaInfo.Identifier == altaId)
 			{
 				await ReplyAsync(discordUser.Mention + ", " + "Already connected!");
 				await Context.Message.DeleteAsync();
@@ -110,9 +126,9 @@ namespace TownCrier
 				Database.Users.Update(user);
 			}
 
-			if (Database.Users.Exists(x => x.AltaInfo != null && x.AltaInfo.Identifier == id && x.UserId != discordUser.Id))
+			if (Database.Users.Exists(x => x.AltaInfo != null && x.AltaInfo.Identifier == altaId && x.UserId != discordUser.Id))
 			{
-				var oldUsers = Database.Users.Find(x => x.AltaInfo.Identifier == id && x.UserId != discordUser.Id);
+				var oldUsers = Database.Users.Find(x => x.AltaInfo.Identifier == altaId && x.UserId != discordUser.Id);
 
 				foreach (var x in oldUsers)
 				{
@@ -127,10 +143,25 @@ namespace TownCrier
 				}
 			}
 
-			user.AltaInfo.Identifier = id;
+			var userInfo = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(altaId);
+
+			user.AltaInfo.Identifier = altaId;
+			user.AltaInfo.Username = userInfo.Username;
 
 			Database.Users.Update(user);
-			
+
+			try
+			{
+				if (linkToken != null)
+				{
+					await AltaApi.ApiClient.Account.LinkDiscordAccount(linkToken, discordUser.Id);
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine("Failed linking to discord in the ATT Database");
+			}
+
 			await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaInfo.Username}!");
 			await Context.Message.DeleteAsync();
 
@@ -182,12 +213,11 @@ namespace TownCrier
 			}
 		}
 
-
 		[Command("forceupdate"), RequireUserPermission(Discord.GuildPermission.ManageGuild)]
 		public async Task Update(SocketUser user)
 		{
 			TownUser entry = Database.GetUser(user);
-			
+
 			if (entry.AltaInfo != null)
 			{
 				await AccountService.UpdateAsync(entry, (SocketGuildUser)user);
@@ -200,7 +230,6 @@ namespace TownCrier
 			}
 		}
 
-
 		[Command("unlink")]
 		public async Task Unlink()
 		{
@@ -209,6 +238,8 @@ namespace TownCrier
 			if (user.AltaInfo != null && user.AltaInfo.Identifier != 0)
 			{
 				user.AltaInfo.Unlink();
+
+				Database.Users.Update(user);
 
 				await ReplyAsync(Context.User.Mention + ", " + "You are no longer linked to an Alta account!");
 			}
@@ -232,7 +263,7 @@ namespace TownCrier
 				await ReplyAsync(Context.User.Mention + ", " + $"Your account is currently linkedto " + user.AltaInfo.Username + "!");
 			}
 		}
-		
+
 		[Command("Verify")]
 		public async Task Verify([Remainder]string encoded)
 		{
@@ -267,7 +298,7 @@ namespace TownCrier
 				{
 					VerifyData result = JsonConvert.DeserializeObject<VerifyData>(userData.Value);
 
-					string test = result.discord.ToLower(); 
+					string test = result.discord.ToLower();
 					string expected = Context.User.Username.ToLower() + "#" + Context.User.Discriminator;
 					string alternate = Context.User.Username.ToLower() + " #" + Context.User.Discriminator;
 
@@ -285,7 +316,7 @@ namespace TownCrier
 
 					if (isValid)
 					{
-						await Link(Context.User, user, id);
+						await Link(Context.User, user, id, encoded);
 					}
 					else
 					{

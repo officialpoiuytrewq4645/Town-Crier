@@ -57,9 +57,9 @@ namespace TownCrier.Services
 				while (!reader.EndOfStream)
 				{
 					string line = reader.ReadLine().Trim();
-					
+
 					string[] split = line.Split(' ');
-					
+
 					if (split.Length == 3)
 					{
 						ulong discord = ulong.Parse(split[0]);
@@ -72,7 +72,7 @@ namespace TownCrier.Services
 						}
 
 						TownUser user = Database.Users.FindOne(item => item.UserId == discord);
-						
+
 						if (user == null)
 						{
 							Console.WriteLine("Couldn't find user " + discord + " for " + name);
@@ -115,16 +115,24 @@ namespace TownCrier.Services
 			DateTime time = DateTime.Now;
 			if (guild == null)
 			{
-				guild = Client.GetGuild(Database.Guilds.FindOne(item => true).GuildId);
+				var dbEntry = Database.Guilds.FindOne(item => true);
+
+				if (dbEntry == null)
+				{
+					Console.WriteLine("Couldnt get a guild");
+					return;
+				}
+
+				guild = Client.GetGuild(dbEntry.GuildId);
 			}
-					
-			if (supporterRole == null)
+
+			if (supporterRole == null && guild != null)
 			{
 				supporterRole = guild.GetRole(547202953505800233);
 				supporterChannel = guild.GetTextChannel(547204432144891907);
 				generalChannel = guild.GetChannel(334933825383563266) as SocketTextChannel;
 			}
-			
+
 			foreach (TownUser user in Database.Users.Find(item => item.AltaInfo != null && (isForced || (item.AltaInfo.IsSupporter && item.AltaInfo.SupporterExpiry < time))))
 			{
 				await UpdateAsync(user, null);
@@ -138,11 +146,11 @@ namespace TownCrier.Services
 			{
 				guild = Client.GetGuild(Database.Guilds.FindOne(item => true).GuildId);
 			}
-						
+
 			try
 			{
 				UserInfo userInfo = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(townUser.AltaInfo.Identifier);
-				
+
 				MembershipStatusResponse result = await AltaApi.ApiClient.UserClient.GetMembershipStatus(townUser.AltaInfo.Identifier);
 
 				if (userInfo == null)
@@ -198,7 +206,7 @@ namespace TownCrier.Services
 							Console.WriteLine(supporterRole);
 						}
 
-						if (!wasSupporter)
+						if (!wasSupporter && supporterChannel != null)
 						{
 							await supporterChannel.SendMessageAsync($"{user.Mention} joined. Thanks for the support!");
 							await generalChannel.SendMessageAsync($"{user.Mention} became a supporter! Thanks for the support!\nIf you'd like to find out more about supporting, visit https://townshiptale.com/supporter");

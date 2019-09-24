@@ -81,7 +81,10 @@ namespace TownCrier
 			// Fetch the guild from the Database
 			var guild = database.GetGuild(newUser.Guild);
 
-			await UpdateRoles(oldUser, newUser, guild);
+			if (guild != null)
+			{
+				await UpdateRoles(oldUser, newUser, guild);
+			}
 		}
 
 		async Task UpdateRoles(SocketGuildUser oldUser, SocketGuildUser newUser, TownGuild guild)

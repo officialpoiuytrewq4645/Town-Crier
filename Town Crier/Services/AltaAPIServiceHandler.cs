@@ -60,7 +60,7 @@ namespace TownCrier.Services
 
 			SetApiClientLogging();
 
-			ApiClient = HighLevelApiClientFactory.CreateHighLevelClient(endpoint, Timeout);
+			ApiClient = HighLevelApiClientFactory.CreateHighLevelClient(endpoint, "TownCrier/1.0", Timeout);
 		}
 
 		void SetApiClientLogging()

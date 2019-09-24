@@ -44,6 +44,7 @@ namespace TownCrier
 			services.GetRequiredService<ActivityRoleService>();
 			services.GetRequiredService<Migrator>();
 			services.GetRequiredService<AccountService>();
+			services.GetRequiredService<AcceptInviteService>();
 
 			await _client.LoginAsync(TokenType.Bot, _config["token"]);
 			await _client.SetGameAsync(_config["status"]);
@@ -79,6 +80,7 @@ namespace TownCrier
 				.AddSingleton<AltaAPI>()
 				.AddSingleton<AltaProtocolService>()
 				.AddSingleton<AccountService>()
+				.AddSingleton<AcceptInviteService>()
 				// Initializes other functionality
 				.AddSingleton<ChannelFilters>()
 				.AddSingleton<CrossAlerter>()

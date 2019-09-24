@@ -39,7 +39,7 @@ namespace TownCrier.Modules
 
 			int total = servers.Sum(item => item.OnlinePlayers.Count());
 
-			await ReplyAsync("```" + result + $"\nTotal Players: {total}```");
+			await ReplyAsync("```" + result + $"\nTotal Players : {total}```");
 		}
 
 		[Command()]
@@ -50,17 +50,22 @@ namespace TownCrier.Modules
 			servers = servers.OrderBy(item => item.Name);
 
 			EmbedBuilder builder = new EmbedBuilder();
-			
+
 			foreach (GameServerInfo info in servers)
 			{
-				builder.AddField(info.Name, info.OnlinePlayers.Count(), true);
+				int count = info.OnlinePlayers.Count();
+
+				if (count > 0)
+				{
+					builder.AddField(info.Name, count, true);
+				}
 			}
 
 			int total = servers.Sum(item => item.OnlinePlayers.Count());
 
 			builder.AddField("Total Players", total, false);
 
-			await ReplyAsync("", embed: builder.Build());
+			await ReplyAsync("Can't see your server? Invite me (`Town Crier`) to your group!", embed: builder.Build());
 		}
 
 		[Command("info"), Alias("player", "p", "i", "players")]

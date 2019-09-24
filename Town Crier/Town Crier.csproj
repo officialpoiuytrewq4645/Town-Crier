@@ -269,6 +269,7 @@
     <Compile Include="Modules\ServersModule.cs" />
     <Compile Include="Modules\WelcomeModule.cs" />
     <Compile Include="Modules\WhoModule.cs" />
+    <Compile Include="Services\AcceptInviteService.cs" />
     <Compile Include="Services\AccountService.cs" />
     <Compile Include="Services\AltaProtocolService.cs" />
     <Compile Include="Services\CrossAlerter.cs" />

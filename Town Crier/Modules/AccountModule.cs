@@ -50,6 +50,25 @@ namespace TownCrier
 		//	public string username;
 		//}
 
+		[Command("link-all")]
+		[RequireUserPermission(GuildPermission.ManageGuild)]
+		public async Task LinkAllExisting()
+		{
+			List<Task> tasks = new List<Task>();
+
+			foreach (var user in Database.Users.FindAll())
+			{
+				if (user.AltaInfo != null && user.AltaInfo.Identifier > 0)
+				{
+					tasks.Add(AltaApi.ApiClient.Account.LinkDiscordAccountAdmin(user.AltaInfo.Identifier, user.UserId));
+
+					Console.WriteLine("Linked account: {0} with {1} - {2}", user.UserId, user.AltaInfo.Identifier, user.AltaInfo.Username);
+				}
+			}
+
+			await Task.WhenAll(tasks);
+		}
+
 		class VerifyData
 		{
 			public string discord;

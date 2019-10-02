@@ -50,6 +50,23 @@ namespace TownCrier
 		//	public string username;
 		//}
 
+		[Command("talems")]
+		public async Task GetTalems()
+		{
+			TownUser user = Database.GetUser(Context.User);
+
+			if (user.AltaInfo == null || user.AltaInfo.Identifier == 0)
+			{
+				await ReplyAsync("You have not linked your alta account. Go to the launcher to link your account");
+			}
+			else
+			{
+				var account = await AltaApi.ApiClient.ShopClient.Account.GetShopAccountInfo();
+
+				await ReplyAsync($"You have {account.ShardBalance} Talems");
+			}
+		}
+
 		[Command("link-all")]
 		[RequireUserPermission(GuildPermission.ManageGuild)]
 		public async Task LinkAllExisting()

@@ -90,19 +90,27 @@ namespace TownCrier
 		[RequireUserPermission(GuildPermission.ManageGuild)]
 		public async Task LinkAllExisting()
 		{
-			List<Task> tasks = new List<Task>();
-
 			foreach (var user in Database.Users.FindAll())
 			{
 				if (user.AltaInfo != null && user.AltaInfo.Identifier > 0)
 				{
-					tasks.Add(AltaApi.ApiClient.Account.LinkDiscordAccountAdmin(user.AltaInfo.Identifier, user.UserId));
+					await Task.Delay(50);
 
-					Console.WriteLine("Linked account: {0} with {1} - {2}", user.UserId, user.AltaInfo.Identifier, user.AltaInfo.Username);
+					try
+					{
+						await AltaApi.ApiClient.Account.LinkDiscordAccountAdmin(user.AltaInfo.Identifier, user.UserId);
+
+						Console.WriteLine("Linked account: {0} with {1} - {2}", user.UserId, user.AltaInfo.Identifier, user.AltaInfo.Username);
+					}
+					catch (Exception e)
+					{
+						await ReplyAsync(user.AltaInfo.Identifier + " " + user.UserId);
+					}
 				}
 			}
 
-			await Task.WhenAll(tasks);
+			Console.WriteLine("Done");
+			await ReplyAsync("Done");
 		}
 
 		class VerifyData

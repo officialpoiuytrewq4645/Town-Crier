@@ -86,6 +86,38 @@ namespace TownCrier
 			}
 		}
 
+		[Command("fix-names")]
+		[RequireUserPermission(GuildPermission.ManageGuild)]
+		public async Task FixAllUsernames()
+		{
+			foreach (var user in Database.Users.FindAll())
+			{
+				if (user.AltaInfo != null && user.AltaInfo.Identifier > 0 && string.IsNullOrEmpty(user.AltaInfo.Username))
+				{
+					await Task.Delay(50);
+
+					try
+					{
+						var userInfo = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(user.AltaInfo.Identifier);
+
+						user.AltaInfo.Username = userInfo.Username;
+
+						Database.Users.Update(user);
+
+						Console.WriteLine("Fixed missing username, DiscordId: {0} AltaId: {1} - {2}", user.UserId, user.AltaInfo.Identifier, user.AltaInfo.Username);
+					}
+					catch (Exception e)
+					{
+						await ReplyAsync(user.AltaInfo.Identifier + " " + user.UserId);
+					}
+				}
+			}
+
+			Console.WriteLine("Done");
+
+			await ReplyAsync("Done");
+		}
+
 		[Command("link-all")]
 		[RequireUserPermission(GuildPermission.ManageGuild)]
 		public async Task LinkAllExisting()

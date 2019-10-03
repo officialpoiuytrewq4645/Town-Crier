@@ -61,9 +61,11 @@ namespace TownCrier
 			}
 			else
 			{
-				var account = await AltaApi.ApiClient.ShopClient.Account.GetShopAccountInfo();
+				var account = await AltaApi.ApiClient.ShopClient.Account.GetShopAccountInfo(user.AltaInfo.Identifier);
 
-				await ReplyAsync($"In Game Username: {user.AltaInfo.Username}\nTalems: {account.ShardBalance}\nSupporter: {account.MemberStatus.IsMember}\nSupporter End: {account.MemberStatus.MemberEndDate}");
+				var stats = await AltaApi.ApiClient.UserClient.GetUserStatisticsAsync(user.AltaInfo.Identifier);
+
+				await ReplyAsync($"In Game Username: {user.AltaInfo.Username}\nTalems: {account.ShardBalance}\nSupporter: {account.MemberStatus.IsMember}\nSupporter End: {account.MemberStatus.MemberEndDate}\nPlay Time: {stats.PlayTime.TotalHours:0.0} hours\nCreated Account: {stats.SignupTime.ToShortDateString()} ({(DateTime.UtcNow - stats.SignupTime).TotalDays:0} days ago) ");
 			}
 		}
 

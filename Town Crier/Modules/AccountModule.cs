@@ -50,6 +50,23 @@ namespace TownCrier
 		//	public string username;
 		//}
 
+		[Command]
+		public async Task AccountInfo()
+		{
+			TownUser user = Database.GetUser(Context.User);
+
+			if (user.AltaInfo == null || user.AltaInfo.Identifier == 0)
+			{
+				await ReplyAsync("You have not linked your alta account. Go to the launcher to link your account");
+			}
+			else
+			{
+				var account = await AltaApi.ApiClient.ShopClient.Account.GetShopAccountInfo();
+
+				await ReplyAsync($"In Game Username: {user.AltaInfo.Username}\nTalems: {account.ShardBalance}\nSupporter: {account.MemberStatus.IsMember}\nSupporter End: {account.MemberStatus.MemberEndDate}");
+			}
+		}
+
 		[Command("talems")]
 		public async Task GetTalems()
 		{

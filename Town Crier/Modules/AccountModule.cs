@@ -50,7 +50,7 @@ namespace TownCrier
 		//	public string username;
 		//}
 
-		[Command("link-all", RunMode = RunMode.Async)]
+		[Command("link-all")]
 		[RequireUserPermission(GuildPermission.ManageGuild)]
 		public async Task LinkAllExisting()
 		{

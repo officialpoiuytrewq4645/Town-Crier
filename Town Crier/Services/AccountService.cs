@@ -112,7 +112,8 @@ namespace TownCrier.Services
 
 		public async Task UpdateAll(bool isForced = false)
 		{
-			DateTime time = DateTime.Now;
+			DateTime time = DateTime.Now;
+
 			if (guild == null)
 			{
 				var dbEntry = Database.Guilds.FindOne(item => true);
@@ -128,8 +129,10 @@ namespace TownCrier.Services
 
 			if (supporterRole == null && guild != null)
 			{
-				supporterRole = guild.GetRole(547202953505800233);
-				supporterChannel = guild.GetTextChannel(547204432144891907);
+				supporterRole = guild.GetRole(547202953505800233);
+
+				supporterChannel = guild.GetTextChannel(547204432144891907);
+
 				generalChannel = guild.GetChannel(334933825383563266) as SocketTextChannel;
 			}
 

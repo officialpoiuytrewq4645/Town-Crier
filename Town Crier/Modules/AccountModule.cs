@@ -50,8 +50,64 @@ namespace TownCrier
 		//	public string username;
 		//}
 
+		[RequireUserPermission(GuildPermission.Administrator)]
+		[Command("investigate")]
+		public async Task Investigate(SocketGuildUser user)
+		{
+			await ReplyAsync(user.Mention + " " + user.JoinedAt.Value.ToLocalTime() + " " + user.CreatedAt.ToLocalTime());
+		}
+
+		[RequireUserPermission(GuildPermission.Administrator)]
+		[Command("removethespamplz")]
+		public async Task RemoveTheSpamPlz(int count)
+		{
+			await Context.Guild.DownloadUsersAsync();
+			
+			foreach (SocketGuildUser user in Context.Guild.Users)
+			{
+				if (user.JoinedAt.HasValue && DateTime.UtcNow - user.JoinedAt.Value.UtcDateTime < TimeSpan.FromMinutes(80))
+				{
+					if (DateTime.UtcNow - user.CreatedAt < TimeSpan.FromDays(1))
+					{
+						count++;
+
+						await ReplyAsync("Kicking " + user.Mention + $"(#{count})" + user.JoinedAt.Value.ToLocalTime() + " " + user.CreatedAt.ToLocalTime());
+						await user.KickAsync();
+					}
+				}
+			}
+
+			await ReplyAsync("I'm done joel, dammit");
+		}
+
+		[RequireUserPermission(GuildPermission.Administrator)]
+		[Command("test")]
+		public async Task Test()
+		{
+			await AccountService.SendGeneralMessage(Context.User as SocketGuildUser);
+		}
+
 		[Command]
 		public async Task AccountInfo()
+		{
+			TownUser user = Database.GetUser(Context.User);
+
+			if (user.AltaInfo == null || user.AltaInfo.Identifier == 0)
+			{
+				await ReplyAsync("You have not linked your alta account. Go to the launcher to link your account");
+			}
+			else
+			{
+				var account = await AltaApi.ApiClient.ShopClient.Account.GetShopAccountInfo(user.AltaInfo.Identifier);
+
+				var stats = await AltaApi.ApiClient.UserClient.GetUserStatisticsAsync(user.AltaInfo.Identifier);
+
+				await ReplyAsync($"In Game Username: {user.AltaInfo.Username}\nSupporter: {account.MemberStatus.IsMember}\nPlay Time: {stats.PlayTime.TotalHours:0.0} hours\nCreated Account: {stats.SignupTime.ToShortDateString()} ({(DateTime.UtcNow - stats.SignupTime).TotalDays:0} days ago) ");
+			}
+		}
+
+		[Command("full")]
+		public async Task AccountInfoFull()
 		{
 			TownUser user = Database.GetUser(Context.User);
 

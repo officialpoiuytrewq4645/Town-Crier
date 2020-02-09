@@ -27,10 +27,20 @@ namespace TownCrier.Services
 			discord.UserLeft += AlertTeam;
 		}
 
+		IRole spamRole;
+
 		public async Task UserJoined(SocketGuildUser user)
 		{
 			// Locate TownGuild in the database
 			var guild = database.GetGuild(user.Guild);
+
+
+			//if (spamRole == null)
+			//{
+			//	spamRole = user.Guild.GetRole(670206379864358913);
+			//}
+
+			//await user.AddRoleAsync(spamRole);
 
 			if (guild != null)
 			{

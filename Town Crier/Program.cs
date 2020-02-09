@@ -45,6 +45,7 @@ namespace TownCrier
 			services.GetRequiredService<Migrator>();
 			services.GetRequiredService<AccountService>();
 			services.GetRequiredService<AcceptInviteService>();
+			services.GetRequiredService<RoutineAnnouncementService>();
 
 			await _client.LoginAsync(TokenType.Bot, _config["token"]);
 			await _client.SetGameAsync(_config["status"]);
@@ -90,6 +91,7 @@ namespace TownCrier
 				.AddSingleton<DoYouCare>()
 				.AddSingleton<OutOfOffice>()
 				.AddSingleton<ActivityRoleService>()
+				.AddSingleton<RoutineAnnouncementService>()
 				//Migrate
 				.AddSingleton<Migrator>()
 				// Build

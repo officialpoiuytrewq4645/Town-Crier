@@ -284,6 +284,7 @@
     <Compile Include="Services\NewcomerService.cs" />
     <Compile Include="Services\OutOfOffice.cs" />
     <Compile Include="Services\PointCounter.cs" />
+    <Compile Include="Services\RoutineAnnouncementService.cs" />
     <Compile Include="Services\WikiSearcher.cs" />
     <Compile Include="Modules\AccountModule.cs" />
     <Compile Include="Modules\BetModule.cs" />

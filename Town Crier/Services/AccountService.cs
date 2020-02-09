@@ -21,6 +21,7 @@ namespace TownCrier.Services
 		static SocketGuild guild;
 		static SocketRole supporterRole;
 		static SocketTextChannel supporterChannel;
+		static SocketTextChannel supporterSpoilersChannel;
 		static SocketTextChannel generalChannel;
 
 		public AccountService(DiscordSocketClient client, TownDatabase database, AltaAPI altaApi, TimerService timer)
@@ -110,9 +111,8 @@ namespace TownCrier.Services
 			await UpdateAll();
 		}
 
-		public async Task UpdateAll(bool isForced = false)
+		void InitializeFields()
 		{
-			DateTime time = DateTime.Now;
 			if (guild == null)
 			{
 				var dbEntry = Database.Guilds.FindOne(item => true);
@@ -129,9 +129,16 @@ namespace TownCrier.Services
 			if (supporterRole == null && guild != null)
 			{
 				supporterRole = guild.GetRole(547202953505800233);
-				supporterChannel = guild.GetTextChannel(547204432144891907);
+				supporterChannel = guild.GetTextChannel(547204432144891907);
+				supporterSpoilersChannel = guild.GetTextChannel(560314409549824008);
 				generalChannel = guild.GetChannel(334933825383563266) as SocketTextChannel;
 			}
+		}
+
+		public async Task UpdateAll(bool isForced = false)
+		{
+			DateTime time = DateTime.Now;
+			InitializeFields();
 
 			foreach (TownUser user in Database.Users.Find(item => item.AltaInfo != null && (isForced || (item.AltaInfo.IsSupporter && item.AltaInfo.SupporterExpiry < time))))
 			{
@@ -188,6 +195,7 @@ namespace TownCrier.Services
 				{
 					supporterRole = guild.GetRole(547202953505800233);
 					supporterChannel = guild.GetTextChannel(547204432144891907);
+					supporterSpoilersChannel = guild.GetTextChannel(560314409549824008);
 					generalChannel = guild.GetChannel(334933825383563266) as SocketTextChannel;
 				}
 
@@ -209,7 +217,8 @@ namespace TownCrier.Services
 						if (!wasSupporter && supporterChannel != null)
 						{
 							await supporterChannel.SendMessageAsync($"{user.Mention} joined. Thanks for the support!");
-							await generalChannel.SendMessageAsync($"{user.Mention} became a supporter! Thanks for the support!\nIf you'd like to find out more about supporting, visit https://townshiptale.com/supporter");
+
+							await SendGeneralMessage(user);
 						}
 					}
 				}
@@ -231,5 +240,25 @@ namespace TownCrier.Services
 			}
 		}
 
+		public async Task SendGeneralMessage(SocketGuildUser user)
+		{
+			InitializeFields();
+
+			EmbedBuilder embed = new EmbedBuilder();
+
+			embed.Description = $"{user.Username} became a supporter! Thanks for the support! Be sure to check out the #supporter-chat and #supporter-spoilers channels!";
+
+			embed.Url = "https://townshiptale.com/supporter";
+
+			embed.ImageUrl = "https://cdn.discordapp.com/attachments/547204432144891907/612124820863320066/image0.png";
+
+			embed.Title = "Parttaaayyy!";
+
+			embed.Footer = new EmbedFooterBuilder()
+				.WithText("Keen to join in? Click 'Parttaaayyy' above!")
+				.WithIconUrl("https://cdn.discordapp.com/attachments/547204432144891907/643959153475190798/Supporter2.png");
+			
+			await generalChannel.SendMessageAsync($"{user.Mention}", false, embed.Build());
+		}
 	}
 }

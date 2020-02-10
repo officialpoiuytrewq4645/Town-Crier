@@ -118,14 +118,14 @@ namespace TownCrier
 				.AddSingleton<ActivityRoleService>()
 				.AddSingleton<RoutineAnnouncementService>()
 				//Migrate
-				.AddSingleton<Migrator>()
-				// Build
-				.BuildServiceProvider();
+				.AddSingleton<Migrator>();
+
+			return result.BuildServiceProvider();
 		}
 
 		IConfiguration BuildConfig()
 		{
-			if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("env_config")))
+			if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("env_config")))
 			{
 				return new ConfigurationBuilder()
 					.AddEnvironmentVariables()

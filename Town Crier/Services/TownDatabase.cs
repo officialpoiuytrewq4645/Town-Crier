@@ -69,7 +69,7 @@ namespace TownCrier.Services
 	{
 		LiteDatabase Database { get; }
 
-		LiteCollection<T> Table { get; }
+		ILiteCollection<T> Table { get; }
 
 		public string Name { get; }
 
@@ -99,12 +99,12 @@ namespace TownCrier.Services
 		
 		public T FindByIndex(object value, string index, string fieldName)
 		{
-			return Table.FindOne(Query.EQ(fieldName, new BsonValue(value)));
+			return Table.FindOne(Query.EQ(fieldName, new BsonValue((int)value)));
 		}
 
 		public IEnumerable<T> FindAllByIndex(object value, string index, string fieldName)
 		{
-			return Table.Find(Query.EQ(fieldName, new BsonValue(value)));
+			return Table.Find(Query.EQ(fieldName, new BsonValue((int)value)));
 		}
 
 		public void Insert(T document)

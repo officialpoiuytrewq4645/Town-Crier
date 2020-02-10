@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TownCrier.Database;
 using Discord;
+using Amazon.DynamoDBv2.DocumentModel;
 
 namespace TownCrier.Services
 {
@@ -37,74 +38,74 @@ namespace TownCrier.Services
 			//Migrate();
 		}
 
-		void Migrate()
-		{
-			string target = "AltaLink.txt";
+		//void Migrate()
+		//{
+		//	string target = "AltaLink.txt";
 
-			FileInfo fileInfo = new FileInfo($"./{target}");
+		//	FileInfo fileInfo = new FileInfo($"./{target}");
 
-			if (!fileInfo.Exists)
-			{
-				Console.WriteLine("Can't find AltaLinks");
-				return;
-			}
+		//	if (!fileInfo.Exists)
+		//	{
+		//		Console.WriteLine("Can't find AltaLinks");
+		//		return;
+		//	}
 
-			Console.WriteLine("Migrating with AltaLinks");
+		//	Console.WriteLine("Migrating with AltaLinks");
 
 
 
-			using (StreamReader reader = new StreamReader($"./{target}"))
-			{
-				while (!reader.EndOfStream)
-				{
-					string line = reader.ReadLine().Trim();
+		//	using (StreamReader reader = new StreamReader($"./{target}"))
+		//	{
+		//		while (!reader.EndOfStream)
+		//		{
+		//			string line = reader.ReadLine().Trim();
 
-					string[] split = line.Split(' ');
+		//			string[] split = line.Split(' ');
 
-					if (split.Length == 3)
-					{
-						ulong discord = ulong.Parse(split[0]);
-						string name = split[1];
+		//			if (split.Length == 3)
+		//			{
+		//				ulong discord = ulong.Parse(split[0]);
+		//				string name = split[1];
 
-						if (!int.TryParse(split[2], out int id))
-						{
-							Console.WriteLine("Failed to parse id for " + line);
-							continue;
-						}
+		//				if (!int.TryParse(split[2], out int id))
+		//				{
+		//					Console.WriteLine("Failed to parse id for " + line);
+		//					continue;
+		//				}
 
-						TownUser user = Database.Users.FindOne(item => item.UserId == discord);
+		//				TownUser user = Database.Users.FindOne(item => item.UserId == discord);
 
-						if (user == null)
-						{
-							Console.WriteLine("Couldn't find user " + discord + " for " + name);
-							continue;
-						}
+		//				if (user == null)
+		//				{
+		//					Console.WriteLine("Couldn't find user " + discord + " for " + name);
+		//					continue;
+		//				}
 
-						if (user.AltaInfo != null)
-						{
-							//Console.WriteLine("Already processed " + line);
-							continue;
-						}
+		//				if (user.AltaInfo != null)
+		//				{
+		//					//Console.WriteLine("Already processed " + line);
+		//					continue;
+		//				}
 
-						Console.WriteLine("Connecting " + user.Name + " to " + name);
+		//				Console.WriteLine("Connecting " + user.Name + " to " + name);
 
-						user.AltaInfo = new UserAltaInfo()
-						{
-							Identifier = id,
-							Username = name
-						};
+		//				user.AltaInfo = new UserAltaInfo()
+		//				{
+		//					Identifier = id,
+		//					Username = name
+		//				};
 
-						Database.Users.Update(user);
+		//				Database.Users.Update(user);
 
-						UpdateAsync(user, null).Wait();
-					}
-					else
-					{
-						Console.WriteLine("Length not 3 " + line);
-					}
-				}
-			}
-		}
+		//				UpdateAsync(user, null).Wait();
+		//			}
+		//			else
+		//			{
+		//				Console.WriteLine("Length not 3 " + line);
+		//			}
+		//		}
+		//	}
+		//}
 
 		async void UpdateAll(object sender, IServiceProvider e)
 		{
@@ -115,7 +116,7 @@ namespace TownCrier.Services
 		{
 			if (guild == null)
 			{
-				var dbEntry = Database.Guilds.FindOne(item => true);
+				var dbEntry = Database.Guilds.FindOne();
 
 				if (dbEntry == null)
 				{
@@ -137,21 +138,50 @@ namespace TownCrier.Services
 
 		public async Task UpdateAll(bool isForced = false)
 		{
-			DateTime time = DateTime.Now;
+			DateTime time = DateTime.Now;			DateTime day = time.Date;
 			InitializeFields();
 
-			foreach (TownUser user in Database.Users.Find(item => item.AltaInfo != null && (isForced || (item.AltaInfo.IsSupporter && item.AltaInfo.SupporterExpiry < time))))
+			if (isForced)
 			{
-				await UpdateAsync(user, null);
-				await Task.Delay(20);
+				DynamoTableAccess<TownUser> dynamoOnly = Database.Users as DynamoTableAccess<TownUser>;
+
+				if (dynamoOnly != null)
+				{
+					foreach (TownUser user in dynamoOnly.FindAllByIndex(0, QueryOperator.GreaterThan, "alta_id-index"))
+					{
+						await UpdateAsync(user, null);
+						await Task.Delay(20);
+					}
+				}
+				else
+				{
+					foreach (TownUser user in Database.Users.FindAll())
+					{
+						await UpdateAsync(user, null);
+						await Task.Delay(20);
+					}
+				}
+			}
+			else
+			{
+				foreach (TownUser user in Database.Users.FindAllByIndex(day, "supporter_expiry_day-index", "SupporterExpiryDay"))
+				{
+					await UpdateAsync(user, null);
+					await Task.Delay(20);
+				}
 			}
 		}
 
 		public async Task UpdateAsync(TownUser townUser, SocketGuildUser user)
 		{
+			if (townUser.AltaInfo == null)
+			{
+				return;
+			}
+
 			if (guild == null)
 			{
-				guild = Client.GetGuild(Database.Guilds.FindOne(item => true).GuildId);
+				guild = Client.GetGuild(Database.Guilds.FindOne().GuildId);
 			}
 
 			try

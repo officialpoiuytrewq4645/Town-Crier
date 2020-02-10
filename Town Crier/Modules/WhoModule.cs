@@ -6,6 +6,7 @@ using System;
 using Discord.Addons.Interactive;
 using TownCrier.Database;
 using TownCrier.Services;
+using Discord.WebSocket;
 
 namespace DiscordBot.Modules
 {
@@ -124,8 +125,10 @@ namespace DiscordBot.Modules
 			[Priority(-1)]
 			public async Task IsCommand(string person)
 			{
-				TownUser user = Database.Users.FindOne(item => item.Name == person);
-				
+				SocketGuildUser discordUser = Context.Guild.Users.FirstOrDefault(item => string.Equals(item.Nickname, person, StringComparison.OrdinalIgnoreCase));
+
+				TownUser user = Database.Users.FindById(discordUser.Id);
+
 				if (user == null)
 				{
 					Random random = new Random();

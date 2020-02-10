@@ -2,7 +2,7 @@
 
 env:
   variables:
-    PROJECT: TownCrier
+    PROJECT: Town Crier
     DOTNET_FRAMEWORK: 4.7.1
 phases:
   build:

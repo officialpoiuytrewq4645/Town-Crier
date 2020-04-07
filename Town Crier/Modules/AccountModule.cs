@@ -57,7 +57,7 @@ namespace TownCrier
 			await ReplyAsync(user.Mention + " " + user.JoinedAt.Value.ToLocalTime() + " " + user.CreatedAt.ToLocalTime());
 		}
 
-		[RequireUserPermission(GuildPermission.Administrator)]
+		[RequireUserPermission(GuildPermission.BanMembers)]
 		[Command("removethespamplz")]
 		public async Task RemoveTheSpamPlz(int count)
 		{
@@ -285,7 +285,7 @@ namespace TownCrier
 			{
 				var olddiscorduser = Context.Client.GetUser(existing.UserId);
 
-				await ReplyAsync(discordUser.Mention + ", " + $"Unlinking your Alta account from {olddiscorduser.Mention}...");
+				await ReplyAsync(discordUser.Mention + ", " + $"Unlinking your Alta account from {olddiscorduser?.Mention}...");
 				await Context.Message.DeleteAsync();
 
 				existing.Unlink();
@@ -316,7 +316,7 @@ namespace TownCrier
 			await ReplyAsync(Context.User.Mention + ", " + $"Successfully linked to your Alta account! Hey there {user.AltaInfo.Username}!");
 			await Context.Message.DeleteAsync();
 
-			await AccountService.UpdateAsync(user, (SocketGuildUser)discordUser);
+			//await AccountService.UpdateAsync(user, (SocketGuildUser)discordUser);
 		}
 
 		[Command("listextra")]

@@ -7,15 +7,23 @@ using TownCrier.Services;
 
 namespace TownCrier
 {
+	[RequireContext(ContextType.Guild)]
 	[Group("info")]
 	public class UserInfoModule : InteractiveBase<SocketCommandContext>
 	{
+		const long AltaGuild = 669745996204343297;
+
 		public AltaAPI AltaApi { get; set; }
 
 		[RequireUserPermission(GuildPermission.Administrator)]
 		[Command("discord")]
-		public async Task GetDiscordInfo(IGuildUser user)
+		public async Task GetDiscordInfo(ICommandContext context, IGuildUser user)
 		{
+			if (Context.Guild.Id != AltaGuild)
+			{
+				return;
+			}
+
 			string message = $@"Name: {user.Nickname}
 ID: {user.Id}
 Created At: {user.CreatedAt}
@@ -26,8 +34,13 @@ Joined At: {user.JoinedAt}";
 
 		[RequireUserPermission(GuildPermission.Administrator)]
 		[Command("alta")]
-		public async Task GetAltaInfo(string userString)
+		public async Task GetAltaInfo(ICommandContext context, string userString)
 		{
+			if (Context.Guild.Id != AltaGuild)
+			{
+				return;
+			}
+
 			PersonalUserInfoResponse user;
 
 			if (!int.TryParse(userString, out int userId))

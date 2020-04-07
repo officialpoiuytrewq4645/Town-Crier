@@ -1,5 +1,4 @@
 ﻿using Alta.WebApi.Models;
-using Alta.WebApi.Models.DTOs.Responses;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
@@ -62,7 +61,7 @@ namespace TownCrier
 		public async Task RemoveTheSpamPlz(int count)
 		{
 			await Context.Guild.DownloadUsersAsync();
-			
+
 			foreach (SocketGuildUser user in Context.Guild.Users)
 			{
 				if (user.JoinedAt.HasValue && DateTime.UtcNow - user.JoinedAt.Value.UtcDateTime < TimeSpan.FromMinutes(80))

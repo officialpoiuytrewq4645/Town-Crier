@@ -23,6 +23,23 @@ namespace TownCrier.Modules.Admin
 		}
 	}
 
+	[Group("test"), RequireUserPermission(Discord.GuildPermission.ManageGuild)]
+	public class TestModule : InteractiveBase<SocketCommandContext>
+	{
+		public ActivityRoleService RoleService { get; }
+
+		public TestModule(ActivityRoleService roleService)
+		{
+			RoleService = roleService;
+		}
+
+		[Command("role")]
+		public async Task Role(SocketGuildUser user)
+		{
+			RoleService.ForceUpdate(user);
+		}
+	}
+
 	[Group("guild"), RequireUserPermission(Discord.GuildPermission.ManageGuild)]
 	public class GuildModule : InteractiveBase<SocketCommandContext>
 	{
@@ -94,6 +111,8 @@ namespace TownCrier.Modules.Admin
 			await ReplyAsync("All done!");
 		}
 
+
+
 		[Group("activity-role"), Alias("activityrole", "activity")]
 		public class ActivityRoleConfig : GuildModule
 		{
@@ -116,12 +135,20 @@ namespace TownCrier.Modules.Admin
 					guild.ActivityRoles.Add(activity);
 				}
 
-				await ReplyAsync("Editing cross alert...\n" +
+				await ReplyAsync("Editing activity...\n" +
 					$"Please answer the following questions ('{SkipCharacter}' to skip / leave default)");
 
 				await AskString($"What is the name of the activity?", activity.ActivityName, value => activity.ActivityName = value);
 
-				await AskEnum("What type of activity? (Playing, Streaming, Listening, Watching)", activity.ActivityType, value => activity.ActivityType = value);
+				await AskEnum("What type of activity? (Playing, Streaming, Listening, Watching)", activity.ActivityType, value =>
+				{
+					if (value == ActivityFlag.Streaming)
+					{
+						value |= ActivityFlag.Playing;
+					}
+
+					activity.ActivityType = value;
+				});
 
 				Database.Guilds.Update(guild);
 

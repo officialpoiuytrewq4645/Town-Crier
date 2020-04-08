@@ -3,9 +3,11 @@ using Discord.Commands;
 using Discord.WebSocket;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TownCrier.Database;
@@ -26,11 +28,13 @@ namespace TownCrier
 		public bool IsEnabled { get;  set; }
 
 		readonly DiscordSocketClient client;
+		private readonly IConfiguration config;
 		readonly IServiceProvider provider;
 		readonly TownDatabase database;
 		
-		public ActivityRoleService(IServiceProvider provider, DiscordSocketClient client, TownDatabase database)
+		public ActivityRoleService(IConfiguration config, IServiceProvider provider, DiscordSocketClient client, TownDatabase database)
 		{
+			this.config = config;
 			this.provider = provider;
 			this.client = client;
 			this.database = database;
@@ -87,6 +91,11 @@ namespace TownCrier
 			}
 		}
 
+		public async void ForceUpdate(SocketGuildUser user)
+		{
+			await UpdateRoles(null, user, database.GetGuild(user.Guild));
+		}
+
 		async Task UpdateRoles(SocketGuildUser oldUser, SocketGuildUser newUser, TownGuild guild)
 		{
 			if (oldUser == null || oldUser.Activity != null)
@@ -103,7 +112,7 @@ namespace TownCrier
 
 					if (role != null)
 					{
-						if (newUser.Activity == null || ((int)activity.ActivityType & newActivityFlag) == 0 || !Regex.IsMatch(newUser.Activity.Name, activity.ActivityName, RegexOptions.IgnoreCase))
+						if (newUser.Activity == null || ((int)activity.ActivityType & newActivityFlag) == 0 || !await IsMatch((activity.ActivityType & ActivityFlag.Streaming) != 0, activity.ActivityName, newUser))
 						{
 							await newUser.RemoveRoleAsync(role);
 						}
@@ -122,13 +131,83 @@ namespace TownCrier
 
 					if (!newUser.Roles.Contains(role))
 					{
-						if (Regex.IsMatch(newUser.Activity.Name, activity.ActivityName, RegexOptions.IgnoreCase))
+						if (await IsMatch((activity.ActivityType & ActivityFlag.Streaming) != 0, activity.ActivityName, newUser))
 						{
 							await newUser.AddRoleAsync(role);
 						}
 					}
 				}
 			}
+		}
+
+		async Task<bool> IsMatch(bool isStreaming, string name, SocketGuildUser newUser)
+		{
+			try
+			{
+				if (!isStreaming)
+				{
+					return Regex.IsMatch(newUser.Activity.Name, name, RegexOptions.IgnoreCase);
+				}
+				else if (Regex.IsMatch(newUser.Activity.Name, name, RegexOptions.IgnoreCase))
+				{
+					using (HttpClient client = new HttpClient())
+					{
+						string url;
+
+						if (newUser.Activity is StreamingGame streaming)
+						{
+							url = streaming.Url;
+							url = url.Substring(url.LastIndexOf('/') + 1);
+						}
+						else
+						{
+							url = newUser.Username;
+						}
+
+						HttpRequestMessage request = new HttpRequestMessage
+						{
+							Method = HttpMethod.Get,
+							RequestUri = new Uri("https://api.twitch.tv/helix/streams?user_login=" + url),
+							Headers =
+						{
+							{ "Client-ID", config["twitchClientId"] }
+						}
+						};
+
+						HttpResponseMessage response = await client.SendAsync(request);
+
+						if (response.IsSuccessStatusCode)
+						{
+							string result = await response.Content.ReadAsStringAsync();
+
+							StreamResponse streamInfo = JsonConvert.DeserializeObject<StreamResponse>(result);
+
+							return streamInfo.data.Length > 0 && Regex.IsMatch(streamInfo.data[0].title, name, RegexOptions.IgnoreCase);
+						}
+					}
+				}
+			}
+			catch
+			{
+
+			}
+
+			return false;
+		}
+
+		class StreamResponse
+		{
+			public class StreamItem
+			{
+				public ulong id;
+				public ulong game_id;
+				public string title;
+				public int viewer_count;
+
+				//https://dev.twitch.tv/docs/v5/reference/streams#get-stream-by-user
+			}
+
+			public StreamItem[] data;
 		}
 	}
 }

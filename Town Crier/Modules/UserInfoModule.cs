@@ -17,9 +17,9 @@ namespace TownCrier
 
 		public AltaAPI AltaApi { get; set; }
 
-		[RequireUserPermission(GuildPermission.Administrator)]
+		[RequireUserPermission(GuildPermission.ManageChannels)]
 		[Command("discord")]
-		public async Task GetDiscordInfo(ICommandContext context, IGuildUser user)
+		public async Task GetDiscordInfo(IGuildUser user)
 		{
 			if (Context.Guild.Id != AltaGuild)
 			{
@@ -34,9 +34,9 @@ Joined At: {user.JoinedAt}";
 			await ReplyAsync(message);
 		}
 
-		[RequireUserPermission(GuildPermission.Administrator)]
+		[RequireUserPermission(GuildPermission.ManageChannels)]
 		[Command("alta")]
-		public async Task GetAltaInfo(ICommandContext context, string userString)
+		public async Task GetAltaInfo(string userString)
 		{
 			if (Context.Guild.Id != AltaGuild)
 			{

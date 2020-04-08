@@ -54,46 +54,46 @@ namespace TownCrier
 		public Migrator(TownDatabase database)
 		{
 			return;
-			Database = database;
+		//	Database = database;
 
-			GetAltaLinks();
+		//	GetAltaLinks();
 
-			string target = "ChatCraft/craftConfig";	
+		//	string target = "ChatCraft/craftConfig";	
 
-			FileInfo fileInfo = new FileInfo($"../../{target}.json");
+		//	FileInfo fileInfo = new FileInfo($"../../{target}.json");
 
-			if (!fileInfo.Exists)
-			{
-				return;
-			}
+		//	if (!fileInfo.Exists)
+		//	{
+		//		return;
+		//	}
 
-			using (StreamReader reader = new StreamReader($"../../{target}.json"))
-			{
-				string json = reader.ReadToEnd();
+		//	using (StreamReader reader = new StreamReader($"../../{target}.json"))
+		//	{
+		//		string json = reader.ReadToEnd();
 
-				JsonSerializerSettings settings = new JsonSerializerSettings() { PreserveReferencesHandling = PreserveReferencesHandling.Objects };
+		//		JsonSerializerSettings settings = new JsonSerializerSettings() { PreserveReferencesHandling = PreserveReferencesHandling.Objects };
 
-				ChatCraftState state = JsonConvert.DeserializeObject<ChatCraftState>(json, settings);
+		//		ChatCraftState state = JsonConvert.DeserializeObject<ChatCraftState>(json, settings);
 
-				Database.Users.InsertBulk(state.players.Select(item => new TownCrier.Database.TownUser()
-				{
-					Name = item.name,
-					Description = item.description,
-					Coins = item.coins,
-					Scoring = new Database.UserScoring()
-					{
-						LastMessage = item.lastMessage,
-						Score = item.score,
-						UsedFirstHourPoint = item.usedFirstHourPoint,
-						UsedHourPoints = item.usedHourPoints
-					},
-					InitialJoin = item.joined,
-					UserId = item.identifier,
-					AltaInfo = infos.ContainsKey(item.identifier) ? infos[item.identifier] : null
-				}));
-			}
+		//		Database.Users.InsertBulk(state.players.Select(item => new TownCrier.Database.TownUser()
+		//		{
+		//			Name = item.name,
+		//			Description = item.description,
+		//			Coins = item.coins,
+		//			Scoring = new Database.UserScoring()
+		//			{
+		//				LastMessage = item.lastMessage,
+		//				Score = item.score,
+		//				UsedFirstHourPoint = item.usedFirstHourPoint,
+		//				UsedHourPoints = item.usedHourPoints
+		//			},
+		//			InitialJoin = item.joined,
+		//			UserId = item.identifier,
+		//			AltaInfo = infos.ContainsKey(item.identifier) ? infos[item.identifier] : null
+		//		}));
+		//	}
 
-			Console.WriteLine(Database.Users.Count());
+		//	Console.WriteLine(Database.Users.Count());
 		}
 	}
 

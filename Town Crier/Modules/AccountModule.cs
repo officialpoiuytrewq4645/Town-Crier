@@ -1,5 +1,4 @@
 ﻿using Alta.WebApi.Models;
-using Alta.WebApi.Models.DTOs.Responses;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
@@ -50,6 +49,43 @@ namespace TownCrier
 		//	public string username;
 		//}
 
+		[RequireUserPermission(GuildPermission.Administrator)]
+		[Command("investigate")]
+		public async Task Investigate(SocketGuildUser user)
+		{
+			await ReplyAsync(user.Mention + " " + user.JoinedAt.Value.ToLocalTime() + " " + user.CreatedAt.ToLocalTime());
+		}
+
+		[RequireUserPermission(GuildPermission.Administrator)]
+		[Command("removethespamplz")]
+		public async Task RemoveTheSpamPlz(int count)
+		{
+			await Context.Guild.DownloadUsersAsync();
+
+			foreach (SocketGuildUser user in Context.Guild.Users)
+			{
+				if (user.JoinedAt.HasValue && DateTime.UtcNow - user.JoinedAt.Value.UtcDateTime < TimeSpan.FromMinutes(80))
+				{
+					if (DateTime.UtcNow - user.CreatedAt < TimeSpan.FromDays(1))
+					{
+						count++;
+
+						await ReplyAsync("Kicking " + user.Mention + $"(#{count})" + user.JoinedAt.Value.ToLocalTime() + " " + user.CreatedAt.ToLocalTime());
+						await user.KickAsync();
+					}
+				}
+			}
+
+			await ReplyAsync("I'm done joel, dammit");
+		}
+
+		[RequireUserPermission(GuildPermission.Administrator)]
+		[Command("test")]
+		public async Task Test()
+		{
+			await AccountService.SendGeneralMessage(Context.User as SocketGuildUser);
+		}
+
 		[Command]
 		public async Task AccountInfo()
 		{
@@ -65,7 +101,26 @@ namespace TownCrier
 
 				var stats = await AltaApi.ApiClient.UserClient.GetUserStatisticsAsync(user.AltaInfo.Identifier);
 
-				await ReplyAsync($"In Game Username: {user.AltaInfo.Username}\nTalems: {account.ShardBalance}\nSupporter: {account.MemberStatus.IsMember}\nSupporter End: {account.MemberStatus.MemberEndDate}\nPlay Time: {stats.PlayTime.TotalHours:0.0} hours\nCreated Account: {stats.SignupTime.ToShortDateString()} ({(DateTime.UtcNow - stats.SignupTime).TotalDays:0} days ago) ");
+				await ReplyAsync($"In Game Username: {user.AltaInfo.Username}\nSupporter: {account.MemberStatus.IsSupporter}\nPlay Time: {stats.PlayTime.TotalHours:0.0} hours\nCreated Account: {stats.SignupTime.ToShortDateString()} ({(DateTime.UtcNow - stats.SignupTime).TotalDays:0} days ago) ");
+			}
+		}
+
+		[Command("full")]
+		public async Task AccountInfoFull()
+		{
+			TownUser user = Database.GetUser(Context.User);
+
+			if (user.AltaInfo == null || user.AltaInfo.Identifier == 0)
+			{
+				await ReplyAsync("You have not linked your alta account. Go to the launcher to link your account");
+			}
+			else
+			{
+				var account = await AltaApi.ApiClient.ShopClient.Account.GetShopAccountInfo(user.AltaInfo.Identifier);
+
+				var stats = await AltaApi.ApiClient.UserClient.GetUserStatisticsAsync(user.AltaInfo.Identifier);
+
+				await ReplyAsync($"In Game Username: {user.AltaInfo.Username}\nTalems: {account.ShardBalance}\nSupporter: {account.MemberStatus.IsSupporter}\nSupporter End: {account.MemberStatus.MemberEndDate}\nPlay Time: {stats.PlayTime.TotalHours:0.0} hours\nCreated Account: {stats.SignupTime.ToShortDateString()} ({(DateTime.UtcNow - stats.SignupTime).TotalDays:0} days ago) ");
 			}
 		}
 
@@ -86,64 +141,64 @@ namespace TownCrier
 			}
 		}
 
-		[Command("fix-names")]
-		[RequireUserPermission(GuildPermission.ManageGuild)]
-		public async Task FixAllUsernames()
-		{
-			foreach (var user in Database.Users.FindAll())
-			{
-				if (user.AltaInfo != null && user.AltaInfo.Identifier > 0 && string.IsNullOrEmpty(user.AltaInfo.Username))
-				{
-					await Task.Delay(50);
+		//[Command("fix-names")]
+		//[RequireUserPermission(GuildPermission.ManageGuild)]
+		//public async Task FixAllUsernames()
+		//{
+		//	foreach (var user in Database.Users.FindAll())
+		//	{
+		//		if (user.AltaInfo != null && user.AltaInfo.Identifier > 0 && string.IsNullOrEmpty(user.AltaInfo.Username))
+		//		{
+		//			await Task.Delay(50);
 
-					try
-					{
-						var userInfo = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(user.AltaInfo.Identifier);
+		//			try
+		//			{
+		//				var userInfo = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(user.AltaInfo.Identifier);
 
-						user.AltaInfo.Username = userInfo.Username;
+		//				user.AltaInfo.Username = userInfo.Username;
 
-						Database.Users.Update(user);
+		//				Database.Users.Update(user);
 
-						Console.WriteLine("Fixed missing username, DiscordId: {0} AltaId: {1} - {2}", user.UserId, user.AltaInfo.Identifier, user.AltaInfo.Username);
-					}
-					catch (Exception e)
-					{
-						await ReplyAsync(user.AltaInfo.Identifier + " " + user.UserId);
-					}
-				}
-			}
+		//				Console.WriteLine("Fixed missing username, DiscordId: {0} AltaId: {1} - {2}", user.UserId, user.AltaInfo.Identifier, user.AltaInfo.Username);
+		//			}
+		//			catch (Exception e)
+		//			{
+		//				await ReplyAsync(user.AltaInfo.Identifier + " " + user.UserId);
+		//			}
+		//		}
+		//	}
 
-			Console.WriteLine("Done");
+		//	Console.WriteLine("Done");
 
-			await ReplyAsync("Done");
-		}
+		//	await ReplyAsync("Done");
+		//}
 
-		[Command("link-all")]
-		[RequireUserPermission(GuildPermission.ManageGuild)]
-		public async Task LinkAllExisting()
-		{
-			foreach (var user in Database.Users.FindAll())
-			{
-				if (user.AltaInfo != null && user.AltaInfo.Identifier > 0)
-				{
-					await Task.Delay(50);
+		//[Command("link-all")]
+		//[RequireUserPermission(GuildPermission.ManageGuild)]
+		//public async Task LinkAllExisting()
+		//{
+		//	foreach (var user in Database.Users.FindAll())
+		//	{
+		//		if (user.AltaInfo != null && user.AltaInfo.Identifier > 0)
+		//		{
+		//			await Task.Delay(50);
 
-					try
-					{
-						await AltaApi.ApiClient.Account.LinkDiscordAccountAdmin(user.AltaInfo.Identifier, user.UserId);
+		//			try
+		//			{
+		//				await AltaApi.ApiClient.Account.LinkDiscordAccountAdmin(user.AltaInfo.Identifier, user.UserId);
 
-						Console.WriteLine("Linked account: {0} with {1} - {2}", user.UserId, user.AltaInfo.Identifier, user.AltaInfo.Username);
-					}
-					catch (Exception e)
-					{
-						await ReplyAsync(user.AltaInfo.Identifier + " " + user.UserId);
-					}
-				}
-			}
+		//				Console.WriteLine("Linked account: {0} with {1} - {2}", user.UserId, user.AltaInfo.Identifier, user.AltaInfo.Username);
+		//			}
+		//			catch (Exception e)
+		//			{
+		//				await ReplyAsync(user.AltaInfo.Identifier + " " + user.UserId);
+		//			}
+		//		}
+		//	}
 
-			Console.WriteLine("Done");
-			await ReplyAsync("Done");
-		}
+		//	Console.WriteLine("Done");
+		//	await ReplyAsync("Done");
+		//}
 
 		class VerifyData
 		{
@@ -172,7 +227,9 @@ namespace TownCrier
 		[RequireUserPermission(GuildPermission.ManageGuild)]
 		public async Task Who(string username)
 		{
-			TownUser entry = Database.Users.FindOne(item => item.AltaInfo != null && string.Compare(item.AltaInfo.Username, username, true) == 0);
+			var userId = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(username);
+
+			TownUser entry = Database.Users.FindByIndex(userId.Identifier, "alta_id-index", "AltaId");
 
 			if (entry != null)
 			{
@@ -216,30 +273,28 @@ namespace TownCrier
 				await ReplyAsync(discordUser.Mention + ", " + $"Unlinking your Discord from {user.AltaInfo.Username}...");
 				await Context.Message.DeleteAsync();
 
-				user.AltaInfo.Unlink();
+				user.Unlink();
 
 				Database.Users.Update(user);
 			}
 
-			if (Database.Users.Exists(x => x.AltaInfo != null && x.AltaInfo.Identifier == altaId && x.UserId != discordUser.Id))
+			TownUser existing = Database.Users.FindByIndex(altaId, "alta_id-index", "AltaId");
+
+			if (existing != null && existing.UserId != discordUser.Id)
 			{
-				var oldUsers = Database.Users.Find(x => x.AltaInfo.Identifier == altaId && x.UserId != discordUser.Id);
+				var olddiscorduser = Context.Client.GetUser(existing.UserId);
 
-				foreach (var x in oldUsers)
-				{
-					var olddiscorduser = Context.Client.GetUser(x.UserId);
+				await ReplyAsync(discordUser.Mention + ", " + $"Unlinking your Alta account from {olddiscorduser.Mention}...");
+				await Context.Message.DeleteAsync();
 
-					await ReplyAsync(discordUser.Mention + ", " + $"Unlinking your Alta account from {olddiscorduser.Mention}...");
-					await Context.Message.DeleteAsync();
+				existing.Unlink();
 
-					x.AltaInfo.Unlink();
-
-					Database.Users.Update(x);
-				}
+				Database.Users.Update(existing);
 			}
 
 			var userInfo = await AltaApi.ApiClient.UserClient.GetUserInfoAsync(altaId);
 
+			user.AltaId = altaId;
 			user.AltaInfo.Identifier = altaId;
 			user.AltaInfo.Username = userInfo.Username;
 
@@ -332,7 +387,7 @@ namespace TownCrier
 
 			if (user.AltaInfo != null && user.AltaInfo.Identifier != 0)
 			{
-				user.AltaInfo.Unlink();
+				user.Unlink();
 
 				Database.Users.Update(user);
 

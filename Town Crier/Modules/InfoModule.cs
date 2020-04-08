@@ -90,11 +90,97 @@ namespace TownCrier.Modules
 			=> ReplyAsync(
 				$"Were you looking for this?\nhttps://feedback.townshiptale.com\n");
 
+		class TechSupportSearch
+		{
+			public class Pages
+			{
+				public int page;
+				public int per_page;
+				public int total_pages;
+			}
+
+			public class Result
+			{
+				public int id;
+				public string slug;
+				public string title;
+				public string body;
+				public string keywords;
+				public string title_tag;
+				public string meta_description;
+				public int category_id;
+				public int user_id;
+				public bool active;
+				public int rank;
+				public string version;
+				public bool front_page;
+				public DateTime created_at;
+				public DateTime updated_at;
+				public int topics_count;
+				bool allow_comments;
+				//category - has more fields...
+			}
+
+			public Pages pages;
+
+			public Result[] results;
+		}
+
+		[Command("techsupport"), Alias("tech")]
+		public async Task TechSupport([Remainder]string search = null)
+		{
+			if (string.IsNullOrEmpty(search))
+			{
+				await ReplyAsync(
+					$"Were you looking for this?\nhttp://tech-support.townshiptale.com\n");
+			}
+			else
+			{
+				var client = new RestClient("http://tech-support.townshiptale.com/api/v1/search?type=Doc&token=0869ef8ce3932c22559b97f580cdbcd1&q=" + search);
+				var request = new RestRequest(Method.GET);
+
+				IRestResponse response = client.Execute(request);
+
+				TechSupportSearch result = JsonConvert.DeserializeObject<TechSupportSearch>(response.Content);
+
+				StringBuilder message = new StringBuilder();
+
+				if (result.results.Length > 0)
+				{
+					message.AppendLine("Here are some articles I've found!\n");
+
+					foreach (TechSupportSearch.Result item in result.results)
+					{
+						message.Append("**");
+						message.Append(item.title);
+						message.AppendLine("**");
+						message.Append("http://tech-support.townshiptale.com/en/docs/");
+						message.AppendLine(item.slug);
+						message.AppendLine();
+					}
+
+					await ReplyAsync(message.ToString());
+				}
+				else
+				{
+					await ReplyAsync(
+						$"No results found!\nMaybe search manually here:\nhttp://tech-support.townshiptale.com\n");
+				}
+			}
+		}
 
 		[Command("supporter"), Alias("support", "donate")]
 		public Task Supporter()
 			=> ReplyAsync(
 				"To become a supporter, visit the following URL, or click the 'Become a Supporter' button in the Alta Launcher.\nhttps://townshiptale.com/supporter");
+
+		[Command("meta")]
+		public Task Meta()
+			=> ReplyAsync("Join the meta discord here!\nhttps://discord.gg/GNpmEN2");
+
+		[Command("dashboard"), Alias("dash")]
+		public Task Dashboard()
+			=> ReplyAsync("Use the dashboard here!\nhttp://dashboard.townshiptale.com");
 
 		class TrelloCard
 		{
@@ -164,11 +250,13 @@ namespace TownCrier.Modules
 			}
 		}
 
+		IRole spamRole;
+
 		[Command("joined")]
 		public async Task Joined()
 		{
 			TownUser user = Database.GetUser(Context.User);
-			
+						
 			await ReplyAsync($"{Context.User.Mention} joined on {user.InitialJoin.ToString("dd/MMM/yyyy")}");
 		}
 

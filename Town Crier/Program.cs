@@ -1,4 +1,8 @@
-﻿using Discord;
+﻿using Amazon;
+using Amazon.DynamoDBv2;
+using Amazon.Extensions.NETCore.Setup;
+using Amazon.Runtime;
+using Discord;
 using Discord.Addons.CommandCache;
 using Discord.Addons.Interactive;
 using Discord.Commands;
@@ -45,6 +49,7 @@ namespace TownCrier
 			services.GetRequiredService<Migrator>();
 			services.GetRequiredService<AccountService>();
 			services.GetRequiredService<AcceptInviteService>();
+			services.GetRequiredService<RoutineAnnouncementService>();
 
 			await _client.LoginAsync(TokenType.Bot, _config["token"]);
 			await _client.SetGameAsync(_config["status"]);
@@ -52,10 +57,17 @@ namespace TownCrier
 
 			await Task.Delay(-1);
 		}
-
+		
 		IServiceProvider ConfigureServices()
 		{
-			return new ServiceCollection()
+			bool hasDDB = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TCAccessKey"));
+			AWSOptions awsOptions = new AWSOptions()
+			{
+				Region = RegionEndpoint.APSoutheast2,
+				Credentials = new BasicAWSCredentials(Environment.GetEnvironmentVariable("TCAccessKey"), Environment.GetEnvironmentVariable("TCSecretKey"))
+			};
+
+			IServiceCollection result = new ServiceCollection()
 				// Base
 				.AddSingleton(_client)
 				.AddSingleton(new CommandService(new CommandServiceConfig()
@@ -72,9 +84,23 @@ namespace TownCrier
 				.AddSingleton(_config)
 				.AddSingleton<TimerService>()
 				.AddSingleton(new CommandCacheService(_client))
-				.AddSingleton(new InteractiveService(_client))
-				// Adds Database
-				.AddSingleton(new LiteDatabase(Path.Combine(Directory.GetCurrentDirectory(), "Data", "Database.db")))
+				.AddSingleton(new InteractiveService(_client));
+
+			// Adds Database
+			if (hasDDB)
+			{
+				result
+				.AddDefaultAWSOptions(awsOptions)
+				.AddAWSService<IAmazonDynamoDB>();
+			}
+
+			if (!hasDDB || !string.IsNullOrEmpty(_config["migrateDdb"]))
+			{
+				result
+				.AddSingleton(new LiteDatabase(Path.Combine(Directory.GetCurrentDirectory(), "Data", "Database.db")));
+			}
+
+			result
 				.AddSingleton<TownDatabase>()
 				// Initializes AltaAPIService
 				.AddSingleton<AltaAPI>()
@@ -90,14 +116,23 @@ namespace TownCrier
 				.AddSingleton<DoYouCare>()
 				.AddSingleton<OutOfOffice>()
 				.AddSingleton<ActivityRoleService>()
+				.AddSingleton<RoutineAnnouncementService>()
 				//Migrate
-				.AddSingleton<Migrator>()
-				// Build
-				.BuildServiceProvider();
+				.AddSingleton<Migrator>();
+
+			return result.BuildServiceProvider();
 		}
 
 		IConfiguration BuildConfig()
 		{
+			if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("env_config")))
+			{
+				return new ConfigurationBuilder()
+					.AddEnvironmentVariables()
+					.Build();
+			}
+
+
 			return new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
 				.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "config.json"))

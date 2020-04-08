@@ -64,7 +64,8 @@ Email: {user.Email}";
 
                 var discordUser = Context.Client.GetUser(accountInfo.Identifier);
 
-                message += $@"Discord Username: {discordUser.Username}
+                message += $@"
+Discord Username: {discordUser.Username}
 Discord ID: {discordUser.Id}";
             }
             catch (Exception e)

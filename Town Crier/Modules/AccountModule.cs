@@ -1,4 +1,4 @@
-﻿using Alta.WebApi.Models;
+using Alta.WebApi.Models;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
@@ -49,7 +49,7 @@ namespace TownCrier
 		//	public string username;
 		//}
 
-		[RequireUserPermission(GuildPermission.Administrator)]
+		[RequireUserPermission(GuildPermission.BanMembers)]
 		[Command("investigate")]
 		public async Task Investigate(SocketGuildUser user)
 		{
@@ -57,8 +57,8 @@ namespace TownCrier
 		}
 
 		[RequireUserPermission(GuildPermission.BanMembers)]
-		[Command("removethespamplz")]
-		public async Task RemoveTheSpamPlz(int count)
+		[Command("removethespamplz"), Alias("bots")]
+		public async Task RemoveTheSpamPlz(int count = 0)
 		{
 			await Context.Guild.DownloadUsersAsync();
 
@@ -70,13 +70,28 @@ namespace TownCrier
 					{
 						count++;
 
-						await ReplyAsync("Kicking " + user.Mention + $"(#{count})" + user.JoinedAt.Value.ToLocalTime() + " " + user.CreatedAt.ToLocalTime());
-						await user.KickAsync();
+						//Check if guild is A Township Tale
+						ulong attguild = 334933825383563266;
+						if (Context.Guild.Id == attguild)
+						{
+							//Send message to bot-log channel
+							ulong botlogchannel = 533105660993208332;
+							await Context.Guild.GetTextChannel(botlogchannel).SendMessageAsync("Kicking " + user.Mention + $" **(#{count})** - " + user.JoinedAt.Value.ToLocalTime() + " " + user.CreatedAt.ToLocalTime());
+
+						}
+						else
+						{
+							//Send message to where command was executed
+							await ReplyAsync("Kicking " + user.Mention + $" **(#{count})** - " + user.JoinedAt.Value.ToLocalTime() + " " + user.CreatedAt.ToLocalTime());
+						}
+
+						await Context.User.SendMessageAsync("You have been kicked from " + Context.Guild.Name + " on suspicion of being a bot, if you aren't a bot feel free to rejoin sorry about any issues this may cause you");
+						await user.KickAsync("Probably a bot");
 					}
 				}
 			}
 
-			await ReplyAsync("I'm done joel, dammit");
+			await ReplyAsync("I'm done " + Context.User.Username + ", dammit. swatted " + count + " bots");
 		}
 
 		[RequireUserPermission(GuildPermission.Administrator)]

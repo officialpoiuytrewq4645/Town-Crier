@@ -15,8 +15,7 @@ namespace TownCrier.Database
 		[DynamoDBHashKey("id")]
 		public ulong UserId { get; set; }
 
-		[DynamoDBGlobalSecondaryIndexHashKey("alta_id-index")]
-		[DynamoDBProperty("alta_id")]
+		[DynamoDBGlobalSecondaryIndexHashKey("alta_id-index", "alta_id")]
 		public int AltaId { get; set; }
 
 		[DynamoDBProperty("supporter_expiry_day")]

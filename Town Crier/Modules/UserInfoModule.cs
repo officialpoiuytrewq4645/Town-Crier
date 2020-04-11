@@ -1,7 +1,9 @@
-﻿using Alta.WebApi.Models.DTOs.Responses;
+﻿using Alta.WebApi.Models;
+using Alta.WebApi.Models.DTOs.Responses;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using System;
 using System.Threading.Tasks;
 using TownCrier.Services;
 
@@ -15,7 +17,7 @@ namespace TownCrier
 
 		public AltaAPI AltaApi { get; set; }
 
-		[RequireUserPermission(GuildPermission.Administrator)]
+		[RequireUserPermission(GuildPermission.ManageChannels)]
 		[Command("discord")]
 		public async Task GetDiscordInfo(IGuildUser user)
 		{
@@ -32,7 +34,7 @@ Joined At: {user.JoinedAt}";
 			await ReplyAsync(message);
 		}
 
-		[RequireUserPermission(GuildPermission.Administrator)]
+		[RequireUserPermission(GuildPermission.ManageChannels)]
 		[Command("alta")]
 		public async Task GetAltaInfo(string userString)
 		{
@@ -55,6 +57,21 @@ Joined At: {user.JoinedAt}";
 			string message = $@"Username: {user.Username}
 ID: {user.Identifier}
 Email: {user.Email}";
+
+            try
+            {
+                LinkedAccountInfo accountInfo = await AltaApi.ApiClient.Account.GetLinkedDiscordAccount(user.Identifier);
+
+                var discordUser = Context.Client.GetUser(accountInfo.Identifier);
+
+                message += $@"
+Discord Username: {discordUser.Username}
+Discord ID: {discordUser.Id}";
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e.ToString());
+            }
 
 			await ReplyAsync(message);
 		}

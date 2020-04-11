@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Town Crier": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "TCSecretKey": "60QMy7+4NXhdXWU7QBv4auyX+CcYZ8yFDJ1zStPy",
+        "TCAccessKey": "AKIAT6DZVQ234VFLTF6S"
+      }
+    }
+  }
+}

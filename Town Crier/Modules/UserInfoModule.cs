@@ -17,7 +17,7 @@ namespace TownCrier
 
 		[RequireUserPermission(GuildPermission.Administrator)]
 		[Command("discord")]
-		public async Task GetDiscordInfo(ICommandContext context, IGuildUser user)
+		public async Task GetDiscordInfo(IGuildUser user)
 		{
 			if (Context.Guild.Id != AltaGuild)
 			{
@@ -34,7 +34,7 @@ Joined At: {user.JoinedAt}";
 
 		[RequireUserPermission(GuildPermission.Administrator)]
 		[Command("alta")]
-		public async Task GetAltaInfo(ICommandContext context, string userString)
+		public async Task GetAltaInfo(string userString)
 		{
 			if (Context.Guild.Id != AltaGuild)
 			{

@@ -165,7 +165,7 @@ namespace TownCrier.Services
 
 		public T FindOne()
 		{
-			Document result = Table.Scan(new ScanOperationConfig() { Limit = 1 }).GetRemaining().FirstOrDefault();
+			Document result = Table.Scan(new ScanOperationConfig() { Limit = 1 }).GetRemainingAsync().Result.FirstOrDefault();
 
 			if (result == null)
 			{
@@ -177,32 +177,32 @@ namespace TownCrier.Services
 
 		public T FindById(ulong id)
 		{
-			return Context.Load<T>(id);
+			return Context.LoadAsync<T>(id).Result;
 		}
 
 		public T FindByIndex(object value, string index, string fieldName)
 		{
-			return Context.Load<T>(value, new DynamoDBOperationConfig() { IndexName = index });
+			return Context.LoadAsync<T>(value, new DynamoDBOperationConfig() { IndexName = index }).Result;
 		}
 
 		public IEnumerable<T> FindAllByIndex(object value, QueryOperator queryOperator, string index)
 		{
-			return Context.Query<T>(value, queryOperator, new DynamoDBOperationConfig() { IndexName = index });
+			return Context.QueryAsync<T>(value, new DynamoDBOperationConfig() { IndexName = index }).GetRemainingAsync().Result;
 		}
 
 		public IEnumerable<T> FindAllByIndex(object value, string index, string fieldName)
 		{
-			return Context.Query<T>(value, new DynamoDBOperationConfig() { IndexName = index });
+			return Context.QueryAsync<T>(value, new DynamoDBOperationConfig() { IndexName = index }).GetRemainingAsync().Result;
 		}
 
 		public void Insert(T document)
 		{
-			Context.Save<T>(document);
+			Context.SaveAsync<T>(document).Wait();
 		}
 
 		public bool Update(T document)
 		{
-			Context.Save<T>(document);
+			Context.SaveAsync<T>(document).Wait();
 
 			return true;
 		}

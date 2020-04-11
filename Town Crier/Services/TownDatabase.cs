@@ -182,7 +182,16 @@ namespace TownCrier.Services
 
 		public T FindByIndex(object value, string index, string fieldName)
 		{
-			return Context.LoadAsync<T>(value, new DynamoDBOperationConfig() { IndexName = index }).Result;
+			//Completely custom... Not caring what params are
+			return Context.FromQuery<T>(new QueryOperationConfig
+			{
+				IndexName = index,
+				Limit = 1,
+				Filter = new QueryFilter("alta_id", QueryOperator.Equal, (int)value)
+			})
+			.FirstOrDefault();
+
+			//return Context.Query<T>(value, new DynamoDBOperationConfig() { IndexName = index });
 		}
 
 		public IEnumerable<T> FindAllByIndex(object value, QueryOperator queryOperator, string index)
@@ -209,7 +218,7 @@ namespace TownCrier.Services
 
 		public IEnumerable<T> FindAll()
 		{
-			throw new NotImplementedException();
+			return Context.Scan<T>();
 		}
 	}
 

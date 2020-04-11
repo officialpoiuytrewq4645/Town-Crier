@@ -36,6 +36,8 @@ namespace TownCrier.Services
 			//Console.WriteLine(database.Users.Count(item => item.AltaInfo != null));
 
 			//Migrate();
+
+			//UpdateAll(true);
 		}
 
 		//void Migrate()
@@ -141,37 +143,47 @@ namespace TownCrier.Services
 
 		public async Task UpdateAll(bool isForced = false)
 		{
-			DateTime time = DateTime.Now;			DateTime day = time.Date;
-			InitializeFields();
-
-			if (isForced)
+			try
 			{
-				DynamoTableAccess<TownUser> dynamoOnly = Database.Users as DynamoTableAccess<TownUser>;
+				DateTime time = DateTime.Now;
+				DateTime day = time.Date;
 
-				if (dynamoOnly != null)
+				InitializeFields();
+
+				if (isForced)
 				{
-					foreach (TownUser user in dynamoOnly.FindAllByIndex(0, QueryOperator.GreaterThan, "alta_id-index"))
+					//DynamoTableAccess<TownUser> dynamoOnly = Database.Users as DynamoTableAccess<TownUser>;
+
+					//if (dynamoOnly != null)
+					//{
+					//	foreach (TownUser user in dynamoOnly.FindAllByIndex(0, QueryOperator.GreaterThanOrEqual, "alta_id-index"))
+					//	{
+					//		await UpdateAsync(user, null);
+					//		await Task.Delay(20);
+					//	}
+					//}
+					//else
 					{
-						await UpdateAsync(user, null);
-						await Task.Delay(20);
+						foreach (TownUser user in Database.Users.FindAll())
+						{
+							await UpdateAsync(user, null);
+							await Task.Delay(20);
+						}
 					}
 				}
 				else
 				{
-					foreach (TownUser user in Database.Users.FindAll())
+					foreach (TownUser user in Database.Users.FindAllByIndex(day, "supporter_expiry_day-index", "SupporterExpiryDay"))
 					{
 						await UpdateAsync(user, null);
 						await Task.Delay(20);
 					}
 				}
 			}
-			else
+			catch (Exception e)
 			{
-				foreach (TownUser user in Database.Users.FindAllByIndex(day, "supporter_expiry_day-index", "SupporterExpiryDay"))
-				{
-					await UpdateAsync(user, null);
-					await Task.Delay(20);
-				}
+				Console.WriteLine(e.Message);
+				throw e;
 			}
 		}
 
@@ -208,6 +220,8 @@ namespace TownCrier.Services
 				bool wasSupporter = townUser.AltaInfo.IsSupporter;
 
 				townUser.AltaInfo.SupporterExpiry = result.ExpiryTime ?? DateTime.MinValue;
+				townUser.SupporterExpiry = townUser.SupporterExpiryDay = townUser.SupporterExpiry?.Date;
+
 				townUser.AltaInfo.IsSupporter = result.IsMember;
 				townUser.AltaInfo.Username = userInfo.Username;
 

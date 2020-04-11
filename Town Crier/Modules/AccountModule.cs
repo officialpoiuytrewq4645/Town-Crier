@@ -85,7 +85,7 @@ namespace TownCrier
 							await ReplyAsync("Kicking " + user.Mention + $" **(#{count})** - " + user.JoinedAt.Value.ToLocalTime() + " " + user.CreatedAt.ToLocalTime());
 						}
 
-						await user.SendMessageAsync("You have been kicked from " + Context.Guild.Name + " on suspicion of being a bot, if you aren't a bot feel free to rejoin sorry about any issues this may cause you");
+						await user.SendMessageAsync("You have been kicked from " + Context.Guild.Name + " on suspicion of being a bot, if you aren't a bot feel free to rejoin. Sorry for the inconvenience!\nhttps://discord.gg/townshiptale");
 						await user.KickAsync("Probably a bot");
 					}
 				}

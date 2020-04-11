@@ -125,13 +125,12 @@ namespace TownCrier
 
 		IConfiguration BuildConfig()
 		{
-			if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("env_config")))
-			{
-				return new ConfigurationBuilder()
-					.AddEnvironmentVariables()
-					.Build();
-			}
-
+			//if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("env_config")))
+			//{
+			//	return new ConfigurationBuilder()
+			//		.AddEnvironmentVariables()
+			//		.Build();
+			//}
 
 			return new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())

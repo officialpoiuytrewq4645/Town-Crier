@@ -10,133 +10,149 @@ using TownCrier.Database;
 
 namespace TownCrier.Services
 {
-	public class AltaAPI
-	{
-		const int Timeout = 40;
+    public class AltaAPI
+    {
+        const int Timeout = 40;
 
-		public IHighLevelApiClient ApiClient { get; set; }
+        public IHighLevelApiClient ApiClient { get; set; }
 
-		TownDatabase database;
-		IConfiguration config;
-		readonly TimerService timer;
+        TownDatabase database;
+        
+        readonly TimerService timer;
 
-		SHA512 sha512 = new SHA512Managed();
+        SHA512 sha512 = new SHA512Managed();
 
-		public AltaAPI(TownDatabase database, IConfiguration config, TimerService timer)
-		{
-			this.database = database;
-			this.config = config;
-			this.timer = timer;
+        public AltaAPI(TownDatabase database, TimerService timer)
+        {
+            this.database = database;
+            this.timer = timer;
 
-			StartWithEndpoint(HighLevelApiClientFactory.ProductionEndpoint);
+            StartWithEndpoint(HighLevelApiClientFactory.ProductionEndpoint);
 
-			EnsureLoggedIn().Wait();
-			//No need to update username/identifier on interval. Needs to be changed to update supporter status, only for those who it's passed expiry for
-			//this.timer.OnClockInterval += _timer_OnClockInterval;
-		}
+            EnsureLoggedIn().Wait();
+            //No need to update username/identifier on interval. Needs to be changed to update supporter status, only for those who it's passed expiry for
+            //this.timer.OnClockInterval += _timer_OnClockInterval;
+        }
 
-		//async void _timer_OnClockInterval(object sender, IServiceProvider e)
-		//{
-		//	var col = database.Users;
-		//	var users = col.FindAll();
+        //async void _timer_OnClockInterval(object sender, IServiceProvider e)
+        //{
+        //	var col = database.Users;
+        //	var users = col.FindAll();
 
-		//	foreach (var x in users.Where(x => x.AltaInfo != null && x.AltaInfo.Identifier != 0))
-		//	{
-		//		var altauser = await ApiClient.UserClient.GetUserInfoAsync(x.AltaInfo.Identifier);
+        //	foreach (var x in users.Where(x => x.AltaInfo != null && x.AltaInfo.Identifier != 0))
+        //	{
+        //		var altauser = await ApiClient.UserClient.GetUserInfoAsync(x.AltaInfo.Identifier);
 
-		//		x.AltaInfo.UpdateAltaCredentials(altauser);
+        //		x.AltaInfo.UpdateAltaCredentials(altauser);
 
-		//		col.Update(x);
-		//	}
-		//}
+        //		col.Update(x);
+        //	}
+        //}
 
-		public void StartWithEndpoint(string endpoint)
-		{
-			if (ApiClient != null)
-			{
-				Console.WriteLine("Already have an Api Client");
-				return;
-			}
+        public void StartWithEndpoint(string endpoint)
+        {
+            if (ApiClient != null)
+            {
+                Console.WriteLine("Already have an Api Client");
+                return;
+            }
 
-			SetApiClientLogging();
+            SetApiClientLogging();
 
-			ApiClient = HighLevelApiClientFactory.CreateHighLevelClient(endpoint, "TownCrier/1.0", Timeout);
-		}
+            ApiClient = HighLevelApiClientFactory.CreateHighLevelClient(endpoint, "TownCrier/1.0", Timeout);
+        }
 
-		void SetApiClientLogging()
-		{
-			//HighLevelApiClientFactory.SetLogging(new AltaLoggerFactory());
-		}
+        void SetApiClientLogging()
+        {
+            //HighLevelApiClientFactory.SetLogging(new AltaLoggerFactory());
+        }
 
-		public void StartOffline(LoginCredentials credentials)
-		{
-			if (ApiClient != null)
-			{
-				Console.WriteLine("Already have an Api Client");
-				return;
-			}
+        public void StartOffline(LoginCredentials credentials)
+        {
+            if (ApiClient != null)
+            {
+                Console.WriteLine("Already have an Api Client");
+                return;
+            }
 
-			SetApiClientLogging();
+            SetApiClientLogging();
 
-			ApiClient = HighLevelApiClientFactory.CreateOfflineHighLevelClient(credentials);
-		}
+            ApiClient = HighLevelApiClientFactory.CreateOfflineHighLevelClient(credentials);
+        }
 
-		public async Task EnsureLoggedIn()
-		{
-			if (!ApiClient.IsLoggedIn)
-			{
-				if (!File.Exists("account.txt"))
-				{
-					Console.WriteLine("`account.txt` expected next to be next to the .exe " +
-						"with the contents `username|password` (for your Alta account)");
-					Console.ReadLine();
-					throw new Exception("No credentials provided");
-				}
+        public async Task EnsureLoggedIn()
+        {
+            if (!ApiClient.IsLoggedIn)
+            {
+                string username, password;
 
-				string username;
-				string password;
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USE_ENV_ALTA_LOGIN")))
+                {
+                    GetCredentialsFromEnvironment(out username, out password);
+                }
+                else
+                {
+                    GetCredentialsFromFile(out username, out password);
+                }
 
-				try
-				{
-					string[] account = System.IO.File.ReadAllText("account.txt").Trim().Split('|');
+                try
+                {
+                    await ApiClient.LoginAsync(username, password);
+                    Console.WriteLine($"Logged in as {username} \n");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
+        }
 
-					username = account[0].Trim();
-					password = account[1].Trim();
+        void GetCredentialsFromEnvironment(out string username, out string password)
+        {
+            username = Environment.GetEnvironmentVariable("ALTA_USERNAME");
+            password = Environment.GetEnvironmentVariable("ALTA_PASSWORD");
+        }
 
-					if (password.Length < 64)
-					{
-						password = HashString(password);
+        void GetCredentialsFromFile(out string username, out string password)
+        {
+            if (!File.Exists("account.txt"))
+            {
+                Console.WriteLine("`account.txt` expected next to be next to the .exe " +
+                    "with the contents `username|password` (for your Alta account)");
+                Console.ReadLine();
+                throw new Exception("No credentials provided");
+            }
 
-						Console.WriteLine("Detected a password in the account file." +
-							" Replaced it with a hash for security reasons.");
+            try
+            {
+                string[] account = System.IO.File.ReadAllText("account.txt").Trim().Split('|');
 
-						File.WriteAllText("account.txt", username + "|" + password);
-					}
-				}
-				catch (Exception e)
-				{
-					Console.WriteLine("`account.txt` found, but failed reading the contents." +
-						" Expected format: `username|password` (for your Alta account)");
-					Console.ReadLine();
-					throw new Exception("Invalid credential format");
-				}
+                username = account[0].Trim();
+                password = account[1].Trim();
 
-				try
-				{
-					await ApiClient.LoginAsync(username, password);
-					Console.WriteLine($"Logged in as {username} \n");
-				}
-				catch (Exception e)
-				{
-					Console.WriteLine(e.Message);
-				}
-			}
-		}
+                if (password.Length < 64)
+                {
+                    password = HashString(password);
 
-		string HashString(string text)
-		{
-			//return Convert.ToBase64String(sha512.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password)));
-			return BitConverter.ToString(sha512.ComputeHash(System.Text.Encoding.UTF8.GetBytes(text))).Replace("-", String.Empty).ToLowerInvariant();
-		}
-	}
+                    Console.WriteLine("Detected a password in the account file." +
+                        " Replaced it with a hash for security reasons.");
+
+                    File.WriteAllText("account.txt", username + "|" + password);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("`account.txt` found, but failed reading the contents." +
+                    " Expected format: `username|password` (for your Alta account)");
+                Console.ReadLine();
+                throw new Exception("Invalid credential format");
+            }
+        }
+
+        string HashString(string text)
+        {
+            //return Convert.ToBase64String(sha512.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password)));
+            return BitConverter.ToString(sha512.ComputeHash(System.Text.Encoding.UTF8.GetBytes(text))).Replace("-", String.Empty).ToLowerInvariant();
+        }
+    }
 }

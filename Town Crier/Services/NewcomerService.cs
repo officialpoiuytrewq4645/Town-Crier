@@ -13,15 +13,13 @@ namespace TownCrier.Services
 	{
 		readonly DiscordSocketClient discord;
 		IServiceProvider provider;
-		readonly IConfiguration config;
 		readonly TownDatabase database;
 
-		public NewcomerService(DiscordSocketClient discord, TownDatabase database, IServiceProvider provider, IConfiguration config)
+		public NewcomerService(DiscordSocketClient discord, TownDatabase database, IServiceProvider provider)
 		{
 			this.discord = discord;
 			this.provider = provider;
 			this.database = database;
-			this.config = config;
 
 			discord.UserJoined += UserJoined;
 			discord.UserLeft += AlertTeam;

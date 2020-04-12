@@ -3,8 +3,13 @@
     "Town Crier": {
       "commandName": "Project",
       "environmentVariables": {
-        "TCSecretKey": "60QMy7+4NXhdXWU7QBv4auyX+CcYZ8yFDJ1zStPy",
-        "TCAccessKey": "AKIAT6DZVQ234VFLTF6S"
+        "TC_SECRET_KEY": "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",
+        "ALTA_PASSWORD": "ee6351cfec828b5a6fe04e980be7d1bc36923e71ab72481064e61f85049f5da6cc28e6b5b998897fa6a7cde0a9480bb80758496f7f6d8e0eef374d5bac7e2a78",
+        "TWITCH_CLIENT_ID": "me3s0zk4mtmvpn7zozmfym9oh6o1vo",
+        "DISCORD_BOT_TOKEN": "MzU4NDI2NjkxMTYyMzQxMzc2.DJ4UUQ.LnTzAGlUMqygbsH4GauU97o0Y6M",
+        "ALTA_USERNAME": "Town Crier",
+        "TC_ACCESS_KEY": "AKIAT6DZVQ234VFLTF6S",
+        "USE_ENV_ALTA_LOGIN": "true"
       }
     }
   }

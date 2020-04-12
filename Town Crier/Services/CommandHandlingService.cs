@@ -18,18 +18,16 @@ namespace TownCrier.Services
 		readonly DiscordSocketClient discord;
 		readonly CommandService commands;
 		readonly InteractiveService interactive;
-		readonly IConfiguration config;
 		readonly TownDatabase database;
 		readonly CommandCacheService cache;
 
 		IServiceProvider provider;
 		
-		public CommandHandlingService(IConfiguration config, IServiceProvider provider, TownDatabase database, DiscordSocketClient discord, CommandService commands, CommandCacheService cache, InteractiveService interactive)
+		public CommandHandlingService(IServiceProvider provider, TownDatabase database, DiscordSocketClient discord, CommandService commands, CommandCacheService cache, InteractiveService interactive)
 		{
 			this.discord = discord;
 			this.commands = commands;
 			this.provider = provider;
-			this.config = config;
 			this.interactive = interactive;
 			this.cache = cache;
 			this.database = database;

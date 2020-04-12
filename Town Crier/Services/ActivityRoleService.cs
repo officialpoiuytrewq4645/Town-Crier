@@ -28,13 +28,11 @@ namespace TownCrier
 		public bool IsEnabled { get;  set; }
 
 		readonly DiscordSocketClient client;
-		private readonly IConfiguration config;
 		readonly IServiceProvider provider;
 		readonly TownDatabase database;
 		
-		public ActivityRoleService(IConfiguration config, IServiceProvider provider, DiscordSocketClient client, TownDatabase database)
+		public ActivityRoleService(IServiceProvider provider, DiscordSocketClient client, TownDatabase database)
 		{
-			this.config = config;
 			this.provider = provider;
 			this.client = client;
 			this.database = database;
@@ -170,7 +168,7 @@ namespace TownCrier
 							RequestUri = new Uri("https://api.twitch.tv/helix/streams?user_login=" + url),
 							Headers =
 						{
-							{ "Client-ID", config["twitchClientId"] }
+							{ "Client-ID", Environment.GetEnvironmentVariable("TWITCH_CLIENT_ID") }
 						}
 						};
 

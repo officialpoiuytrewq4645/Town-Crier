@@ -69,7 +69,7 @@ in the CMD line in the project folder. You can still run it normally inside visu
 	"timerInterval" : "<INTERVAL IN MS TO UPDATE VARIOUS THINGS (300000 is a good default)>" 
 }
 ```
-3. Setup the Evironement Variables
+3. Setup the Environment Variables
 
 | Variable | Description | Required |
 | --- | --- | --- |
@@ -81,7 +81,7 @@ in the CMD line in the project folder. You can still run it normally inside visu
 | TC_SECRET_KEY | AWS Secret Key, see above for more details | NO |
 | TWITCH_CLIENT_ID | Used to mark players who are streaming the game on Twitch | NO |
 
-You will need to set these in visual studio when you're testing your bot as well as in the environement you're deploying in. 
+You will need to set these in visual studio when you're testing your bot as well as in the environment you're deploying in. 
 
 If using the account.txt to provide your Alta login credentials.
 Create file called `account.txt` next to the executable and then fill out the file with the following info

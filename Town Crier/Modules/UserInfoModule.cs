@@ -19,17 +19,30 @@ namespace TownCrier
 
 		[RequireUserPermission(GuildPermission.ManageChannels)]
 		[Command("discord")]
-		public async Task GetDiscordInfo(IGuildUser user)
+		public async Task GetDiscordInfo(IUser user)
 		{
 			if (Context.Guild.Id != AltaGuild)
 			{
 				return;
 			}
 
-			string message = $@"Name: {user.Nickname}
+			string message = $@"Username: {user.Username}
 ID: {user.Id}
-Created At: {user.CreatedAt}
-Joined At: {user.JoinedAt}";
+Created At: {user.CreatedAt}";
+
+			try
+			{
+				var guildUser = Context.Guild.GetUser(user.Id);
+
+				if (guildUser != null)
+				{
+					message += $"\nJoined At: {guildUser.JoinedAt}";
+				}
+			}
+			catch (Exception e)
+			{
+
+			}
 
 			await ReplyAsync(message);
 		}

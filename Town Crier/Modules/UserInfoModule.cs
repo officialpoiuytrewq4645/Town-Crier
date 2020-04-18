@@ -35,6 +35,24 @@ Joined At: {user.JoinedAt}";
 		}
 
 		[RequireUserPermission(GuildPermission.ManageChannels)]
+		[Command("discord-id")]
+		public async Task GetDiscordInfo(ulong userId)
+		{
+			if (Context.Guild.Id != AltaGuild)
+			{
+				return;
+			}
+
+			IUser user = Context.Client.GetUser(userId);
+
+			string message = $@"Name: {user.Username}
+ID: {user.Id}
+Created At: {user.CreatedAt}";
+
+			await ReplyAsync(message);
+		}
+
+		[RequireUserPermission(GuildPermission.ManageChannels)]
 		[Command("alta")]
 		public async Task GetAltaInfo(string userString)
 		{

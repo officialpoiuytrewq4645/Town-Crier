@@ -86,7 +86,9 @@ namespace TownCrier.Services
             {
                 string username, password;
 
-                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USE_ENV_ALTA_LOGIN")))
+				string useEnvVars = Environment.GetEnvironmentVariable("USE_ENV_ALTA_LOGIN");
+
+				if (useEnvVars == "true")
                 {
                     GetCredentialsFromEnvironment(out username, out password);
                 }
@@ -107,11 +109,16 @@ namespace TownCrier.Services
             }
         }
 
-        void GetCredentialsFromEnvironment(out string username, out string password)
-        {
-            username = Environment.GetEnvironmentVariable("ALTA_USERNAME");
-            password = Environment.GetEnvironmentVariable("ALTA_PASSWORD");
-        }
+		void GetCredentialsFromEnvironment(out string username, out string password)
+		{
+			username = Environment.GetEnvironmentVariable("ALTA_USERNAME");
+			password = Environment.GetEnvironmentVariable("ALTA_PASSWORD");
+
+			if (password.Length < 64)
+			{
+				password = HashString(password);
+			}
+		}
 
         void GetCredentialsFromFile(out string username, out string password)
         {

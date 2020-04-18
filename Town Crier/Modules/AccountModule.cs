@@ -90,8 +90,66 @@ namespace TownCrier
 					}
 				}
 			}
+		}
 
-			await ReplyAsync("I'm done " + Context.User.Username + ", dammit. swatted " + count + " bots");
+		[RequireUserPermission(GuildPermission.BanMembers)]
+		[Command("kick-bots")]
+		public async Task KickBot(bool isRealRun = false, float days = 1, int kickLimit = -1)
+		{
+			int count = 0;
+
+			await Context.Guild.DownloadUsersAsync();
+
+			DateTime startCheck = DateTime.Now.AddDays(-days);
+
+			var toKick = new List<SocketGuildUser>();
+
+			foreach (SocketGuildUser user in Context.Guild.Users)
+			{
+				if (user.JoinedAt.HasValue &&
+					user.JoinedAt > startCheck &&
+					user.JoinedAt - user.CreatedAt < TimeSpan.FromMinutes(60))
+				{
+					if (kickLimit > 0 && count > kickLimit)
+					{
+						break;
+					}
+
+					if (string.IsNullOrEmpty(user.AvatarId) && user.Activity == null && user.Status == UserStatus.Offline)
+					{
+						toKick.Add(user);
+					}
+
+					count++;
+				}
+			}
+
+			const ulong botlogchannel = 533105660993208332;
+			SocketTextChannel logChannel = null;
+
+			if (Context.Guild.Id == 334933825383563266) //ATT Guild
+			{
+				logChannel = Context.Guild.GetTextChannel(botlogchannel);
+			}
+
+			for (int i = 0; i < toKick.Count; i++)
+			{
+				SocketGuildUser user = toKick[i];
+
+				if (isRealRun)
+				{
+					await user.SendMessageAsync("You have been kicked from " + Context.Guild.Name + " on suspicion of being a bot, if you aren't a bot feel free to rejoin. Sorry for the inconvenience!\nhttps://discord.gg/townshiptale");
+					await user.KickAsync("Probably a bot");
+				}
+
+				await logChannel?.SendMessageAsync($"{(isRealRun ? "" : "DRY RUN - ")}Kicked {user.Mention} **(#{i + 1})**");
+			}
+
+			string finishedMessage = $"{(isRealRun ? "" : "DRY RUN - ")}{Context.User.Mention} I've finished Kicking bots that have joined since {startCheck.ToShortDateString()}, Total: {toKick.Count}";
+
+			await base.ReplyAsync(finishedMessage);
+
+			await logChannel?.SendMessageAsync(finishedMessage);
 		}
 
 		[RequireUserPermission(GuildPermission.Administrator)]

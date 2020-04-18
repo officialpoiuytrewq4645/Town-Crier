@@ -13,6 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using TownCrier.Services;
 
@@ -29,7 +31,9 @@ namespace TownCrier
 
 		public async Task MainAsync()
 		{
-			Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Data"));
+            Console.WriteLine("STARTING");
+
+            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Data"));
 			_client = new DiscordSocketClient();
 			_config = BuildConfig();
 
@@ -51,7 +55,7 @@ namespace TownCrier
 			services.GetRequiredService<AcceptInviteService>();
 			services.GetRequiredService<RoutineAnnouncementService>();
 
-			await _client.LoginAsync(TokenType.Bot, _config["token"]);
+			await _client.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN"));
 			await _client.SetGameAsync(_config["status"]);
 			await _client.StartAsync();
 
@@ -60,12 +64,14 @@ namespace TownCrier
 		
 		IServiceProvider ConfigureServices()
 		{
-			bool hasDDB = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TCAccessKey"));
+			bool hasDDB = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TC_ACCESS_KEY"));
 			AWSOptions awsOptions = new AWSOptions()
 			{
 				Region = RegionEndpoint.APSoutheast2,
-				Credentials = new BasicAWSCredentials(Environment.GetEnvironmentVariable("TCAccessKey"), Environment.GetEnvironmentVariable("TCSecretKey"))
+				Credentials = new BasicAWSCredentials(Environment.GetEnvironmentVariable("TC_ACCESS_KEY"), Environment.GetEnvironmentVariable("TC_SECRET_KEY")),
 			};
+
+            //awsOptions.DefaultClientConfig.HttpClientFactory = new DebugFactory(awsOptions.DefaultClientConfig.HttpClientFactory);
 
 			IServiceCollection result = new ServiceCollection()
 				// Base
@@ -120,19 +126,19 @@ namespace TownCrier
 				//Migrate
 				.AddSingleton<Migrator>();
 
-			return result.BuildServiceProvider();
+            return result.BuildServiceProvider();
 		}
 
 		IConfiguration BuildConfig()
 		{
-			//if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("env_config")))
-			//{
-			//	return new ConfigurationBuilder()
-			//		.AddEnvironmentVariables()
-			//		.Build();
-			//}
-
-			return new ConfigurationBuilder()
+            //if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("env_config")))
+            //{
+            //	return new ConfigurationBuilder()
+            //		.AddEnvironmentVariables()
+            //		.Build();
+            //}
+            
+            return new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
 				.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "config.json"))
 				.Build();

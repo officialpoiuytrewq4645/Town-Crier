@@ -61,4 +61,4 @@ obj
 Town Crier/ChatCraft/
 Town Crier/Accounts/
 Town Crier/reporter.json
-/Town Crier/config.json
+Town Crier/Properties/launchSettings.json

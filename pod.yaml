@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "town-crier"
+spec:
+  hostNetwork: true
+  restartPolicy: Always
+  containers:
+    - name: town-crier
+      image: gcr.io/a-township-tale-servers/town-crier:latest
+      tty: true
+      stdin: true
+      command: ["/data/Town-Crier"]
+      env:
+      - name: TC_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: town-crier-credentials
+            key: TC_ACCESS_KEY
+      - name: TC_SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: town-crier-credentials
+            key: TC_SECRET_KEY
+      - name: ALTA_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: town-crier-credentials
+            key: ALTA_USERNAME
+      - name: ALTA_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: town-crier-credentials
+            key: ALTA_PASSWORD
+      - name: DISCORD_BOT_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: town-crier-credentials
+            key: DISCORD_BOT_TOKEN
+      - name: TWITCH_CLIENT_ID
+        valueFrom:
+          secretKeyRef:
+            name: town-crier-credentials
+            key: TWITCH_CLIENT_ID
+      - name: TWITCH_CLIENT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: town-crier-credentials
+            key: TWITCH_CLIENT_SECRET

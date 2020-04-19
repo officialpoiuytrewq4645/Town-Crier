@@ -1,4 +1,4 @@
-﻿using Alta.WebApi.Models;
+using Alta.WebApi.Models;
 using Alta.WebApi.Models.DTOs.Responses;
 using Discord;
 using Discord.Addons.Interactive;
@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TableParser;
 using TownCrier.Services;
+using System;
 
 namespace TownCrier.Modules
 {
@@ -39,7 +40,26 @@ namespace TownCrier.Modules
 
 			int total = servers.Sum(item => item.OnlinePlayers.Count());
 
-			await ReplyAsync("```" + result + $"\nTotal Players : {total}```");
+			//Console.Write(result);
+			string[] lines = result.Split(new[] { Environment.NewLine },StringSplitOptions.None);
+			string message = "";
+			for (int i = 0; i < lines.Length; i++)
+			{
+				
+				if (message.Length + lines[i].Length < 2000)
+				{
+					message += $"{lines[i]}\n";
+				} 
+				else
+				{
+					await ReplyAsync($"```{message}```");
+					message = "";
+				}
+					
+
+				
+			}
+			await ReplyAsync("`" + $"Total Players : {total}`");
 		}
 
 		[Command()]
@@ -114,8 +134,22 @@ namespace TownCrier.Modules
 					return;
 				}
 			}
-
-			await ReplyAsync(response.ToString());
+			string[] lines = response.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+			string message = "";
+			for (int i = 0; i < lines.Length; i++)
+			{
+				
+				if (message.Length + lines[i].Length < 2000)
+				{
+					message += $"{lines[i]}\n";
+				}
+				else
+				{
+					await ReplyAsync($"{message}");
+					message = "";
+				}
+			}
+				//await ReplyAsync(response.ToString());
 		}
 	}
 }

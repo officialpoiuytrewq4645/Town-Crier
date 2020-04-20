@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Discord.Commands;
 using System.Collections.Generic;
 using System.Linq;
@@ -125,7 +125,17 @@ namespace DiscordBot.Modules
 			[Priority(-1)]
 			public async Task IsCommand(string person)
 			{
-				SocketGuildUser discordUser = Context.Guild.Users.FirstOrDefault(item => string.Equals(item.Nickname, person, StringComparison.OrdinalIgnoreCase));
+				//SocketGuildUser discordUser = null;
+
+				SocketGuildUser discordUser = Context.Guild.Users.FirstOrDefault(item => (item.Nickname == null) ? item.Username.ToLower().Contains(person.ToLower()) : item.Nickname.ToLower().Contains(person.ToLower())); 
+					
+		
+				
+				//if(discordUser == null)
+				//{
+				//	discordUser = Context.Guild.Users.FirstOrDefault(item => item.Username.Equals(person, StringComparison.OrdinalIgnoreCase));
+				//}
+				//TownUser user = Database.Users.FindOne(item => item.Name == person);
 
 				TownUser user = Database.Users.FindById(discordUser.Id);
 
@@ -133,7 +143,7 @@ namespace DiscordBot.Modules
 				{
 					Random random = new Random();
 
-					await ReplyAsync(string.Format(UnknownReplies[random.Next(UnknownReplies.Length)], person, Context.User.Mention));
+					await ReplyAsync(string.Format(UnknownReplies[random.Next(UnknownReplies.Length)], (discordUser.Nickname == null) ? discordUser.Username : discordUser.Nickname, Context.User.Mention));
 					return;
 				}
 
@@ -143,7 +153,7 @@ namespace DiscordBot.Modules
 					return;
 				}
 
-				await ReplyAsync(person + " is " + user.Description);
+				await ReplyAsync((discordUser.Nickname == null) ? discordUser.Username : discordUser.Nickname + " is " + user.Description);
 			}
 		}
 	}

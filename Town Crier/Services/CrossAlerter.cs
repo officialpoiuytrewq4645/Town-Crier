@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.WebSocket;
 using LiteDB;
 using System.Linq;
@@ -47,7 +47,7 @@ namespace TownCrier.Services
 			{
 				ITextChannel targetChannel = await channel.Guild.GetTextChannelAsync(crossAlert.Channel);
 
-				IUserMessage response = await targetChannel.SendMessageAsync(message.Author.Mention + " in " + channel.Mention + ": " + message.Content);
+				IUserMessage response = await targetChannel.SendMessageAsync(message.Author.Mention + " in " + channel.Mention + ": " + message.Content + "\n" + message.GetJumpUrl() );
 
 				await response.AddReactionAsync(new Emoji("✔"));
 			}

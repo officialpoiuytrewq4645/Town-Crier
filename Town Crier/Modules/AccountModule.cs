@@ -136,16 +136,16 @@ namespace TownCrier
 			{
 				SocketGuildUser user = toKick[i];
 
+				await logChannel?.SendMessageAsync($"{(isRealRun ? "" : "DRY RUN - ")}Kicked {user.Mention} **(#{i + 1})**");
+
 				if (isRealRun)
 				{
 					await user.SendMessageAsync("You have been kicked from " + Context.Guild.Name + " on suspicion of being a bot, if you aren't a bot feel free to rejoin. Sorry for the inconvenience!\nhttps://discord.gg/townshiptale");
 					await user.KickAsync("Probably a bot");
 				}
-
-				await logChannel?.SendMessageAsync($"{(isRealRun ? "" : "DRY RUN - ")}Kicked {user.Mention} **(#{i + 1})**");
 			}
 
-			string finishedMessage = $"{(isRealRun ? "" : "DRY RUN - ")}{Context.User.Mention} I've finished Kicking bots that have joined since {startCheck.ToShortDateString()}, Total: {toKick.Count}";
+			string finishedMessage = $"{(isRealRun ? "" : "DRY RUN - ")}{Context.User.Mention} I've finished kicking bots that have joined since {startCheck.ToShortDateString()}, Total: {toKick.Count}";
 
 			await base.ReplyAsync(finishedMessage);
 

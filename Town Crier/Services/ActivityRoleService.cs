@@ -44,6 +44,15 @@ namespace TownCrier
 
 		async Task Ready(SocketGuild discordGuild)
 		{
+			if (discordGuild.Id == 334933825383563266) //ATT Guild
+			{
+				const ulong botlogchannel = 533105660993208332;
+
+				SocketTextChannel logChannel = discordGuild.GetTextChannel(botlogchannel);
+
+				await logChannel.SendMessageAsync("Town Crier has Restarted");
+			}
+
 			Console.WriteLine(discordGuild.Name + " is ready");
 
 			TownGuild guild = database.GetGuild(discordGuild);

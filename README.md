@@ -90,4 +90,3 @@ Create file called `account.txt` next to the executable and then fill out the fi
 ```
 
 4. Run the bot and type in `@YOUR_BOT guild init` and follow the prompts
-

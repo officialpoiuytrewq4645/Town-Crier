@@ -1,4 +1,4 @@
-﻿using Amazon;
+using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Extensions.NETCore.Setup;
 using Amazon.Runtime;
@@ -42,6 +42,7 @@ namespace TownCrier
 			await services.GetRequiredService<CommandHandlingService>().InitializeAsync(services);
 
 			services.GetRequiredService<OutOfOffice>();
+			services.GetRequiredService<GettingStartedService>();
 			services.GetRequiredService<NewcomerService>();
 			services.GetRequiredService<AltaProtocolService>();
 			services.GetRequiredService<DoYouCare>();
@@ -121,6 +122,7 @@ namespace TownCrier
 				.AddSingleton<PointCounter>()
 				.AddSingleton<DoYouCare>()
 				.AddSingleton<OutOfOffice>()
+				.AddSingleton<GettingStartedService>()
 				.AddSingleton<ActivityRoleService>()
 				.AddSingleton<RoutineAnnouncementService>()
 				//Migrate

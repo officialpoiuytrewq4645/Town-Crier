@@ -16,7 +16,7 @@ namespace TownCrier.Services
 		{
 			this.discord = discord;
 
-			discord.MessageReceived += DealWith;
+			//discord.MessageReceived += DealWith;
 		}
 
 		async Task DealWith(SocketMessage message)

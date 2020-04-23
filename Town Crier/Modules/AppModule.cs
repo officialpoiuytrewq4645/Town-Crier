@@ -7,7 +7,7 @@ namespace DiscordBot.Modules
 {
 	[RequireUserPermission(Discord.GuildPermission.Administrator)]
 	[Group("app")]
-	public class MetaModule : InteractiveBase<SocketCommandContext>
+	public class AppModule : InteractiveBase<SocketCommandContext>
 	{
 		[Summary("Restart Town Crier")]
 		[Command("quit")]

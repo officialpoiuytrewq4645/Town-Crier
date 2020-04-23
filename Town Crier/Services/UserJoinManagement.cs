@@ -44,15 +44,15 @@ namespace TownCrier
 					Console.WriteLine(e);
 					Console.WriteLine("Failed validating all emotes on startup");
 				}
-			}
 
-			if (!hasSubscribed)
-			{
-				hasSubscribed = true;
+				if (!hasSubscribed)
+				{
+					hasSubscribed = true;
 
-				client.ReactionAdded += HandleReactionAdded;
+					client.ReactionAdded += HandleReactionAdded;
 
-				Console.WriteLine("Starting to listen to reactions");
+					Console.WriteLine("Starting to listen to reactions");
+				}
 			}
 
 			return Task.CompletedTask;

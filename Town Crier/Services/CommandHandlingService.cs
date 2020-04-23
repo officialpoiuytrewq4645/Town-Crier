@@ -22,7 +22,7 @@ namespace TownCrier.Services
 		readonly CommandCacheService cache;
 
 		IServiceProvider provider;
-		
+
 		public CommandHandlingService(IServiceProvider provider, TownDatabase database, DiscordSocketClient discord, CommandService commands, CommandCacheService cache, InteractiveService interactive)
 		{
 			this.discord = discord;
@@ -35,6 +35,48 @@ namespace TownCrier.Services
 			this.discord.MessageReceived += MessageReceived;
 			this.discord.ReactionAdded += OnReactAdded;
 			this.discord.MessageUpdated += OnMessageUpdated;
+
+			commands.Log += HandleLog;
+			commands.CommandExecuted += HandleExecutedCommand;
+		}
+
+		Task HandleExecutedCommand(Optional<CommandInfo> command, ICommandContext context, IResult result)
+		{
+			if (command.IsSpecified)
+			{
+				Console.WriteLine("User: {0} Executed Command: {1} {2} in channel: {3}", context.User, command.Value.Name, command.Value.Module.Name, context.Channel);
+			}
+			else
+			{
+				Console.WriteLine("User: {0} Executed an unknown command in channel: {1} message: {2}", context.User, context.Channel, context.Message.Content);
+			}
+
+			return Task.CompletedTask;
+		}
+
+		Task HandleLog(LogMessage log)
+		{
+			switch (log.Severity)
+			{
+				case LogSeverity.Critical:
+					break;
+				case LogSeverity.Error:
+					break;
+				case LogSeverity.Warning:
+					break;
+				case LogSeverity.Info:
+					break;
+				case LogSeverity.Verbose:
+					break;
+				case LogSeverity.Debug:
+					break;
+				default:
+					break;
+			}
+
+			Console.WriteLine($"level: {log.Severity} log: {log.Message} source: {log.Source} exception: {log.Exception}");
+
+			return Task.CompletedTask;
 		}
 
 		public async Task InitializeAsync(IServiceProvider provider)
@@ -77,7 +119,7 @@ namespace TownCrier.Services
 			int argPos = 0;
 			if (guild == null && !message.HasMentionPrefix(discord.CurrentUser, ref argPos)) return;
 			if (guild != null && !message.HasStringPrefix(guild.Prefix, ref argPos) && !message.HasMentionPrefix(discord.CurrentUser, ref argPos)) return;
-			
+
 			var result = await commands.ExecuteAsync(context, argPos, provider);
 
 			if (result.Error.HasValue && (result.Error.Value != CommandError.UnknownCommand))

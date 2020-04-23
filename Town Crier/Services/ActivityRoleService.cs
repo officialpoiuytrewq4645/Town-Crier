@@ -22,15 +22,15 @@ namespace TownCrier
 		Listening = 1 << ActivityType.Listening,
 		Watching = 1 << ActivityType.Watching,
 	}
-	
+
 	public class ActivityRoleService
 	{
-		public bool IsEnabled { get;  set; }
+		public bool IsEnabled { get; set; }
 
 		readonly DiscordSocketClient client;
 		readonly IServiceProvider provider;
 		readonly TownDatabase database;
-		
+
 		public ActivityRoleService(IServiceProvider provider, DiscordSocketClient client, TownDatabase database)
 		{
 			this.provider = provider;
@@ -56,46 +56,57 @@ namespace TownCrier
 			Console.WriteLine(discordGuild.Name + " is ready");
 
 			TownGuild guild = database.GetGuild(discordGuild);
-			
+
 			if (guild == null || guild.ActivityRoles.Count == 0)
 			{
 				return;
 			}
 
-			_  = Task.Run(async () =>
+			_ = Task.Run(async () =>
+		   {
+			   try
+			   {
+				   await discordGuild.DownloadUsersAsync();
+
+				   foreach (SocketGuildUser user in discordGuild.Users)
+				   {
+					   Console.WriteLine("Update " + user.Username);
+					   await UpdateRoles(null, user, guild);
+				   }
+			   }
+			   catch (Exception e)
+			   {
+				   Console.WriteLine(e);
+				   Console.WriteLine(e.StackTrace);
+			   }
+
+			   Console.WriteLine("DONE!");
+		   });
+		}
+
+		async Task UserUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
+		{
+			_ = Task.Run(async () =>
 			{
 				try
 				{
-					await discordGuild.DownloadUsersAsync();
+					// If both activities are the same (in type & message), return
+					if (oldUser.Activity == newUser.Activity) return;
 
-					foreach (SocketGuildUser user in discordGuild.Users)
+					// Fetch the guild from the Database
+					var guild = database.GetGuild(newUser.Guild);
+
+					if (guild != null)
 					{
-						Console.WriteLine("Update " + user.Username);
-						await UpdateRoles(null, user, guild);
+						await UpdateRoles(oldUser, newUser, guild);
 					}
 				}
 				catch (Exception e)
 				{
 					Console.WriteLine(e);
-					Console.WriteLine(e.StackTrace);
+					Console.WriteLine("Failed updating user");
 				}
-
-				Console.WriteLine("DONE!");
 			});
-		}
-
-		async Task UserUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
-		{
-			// If both activities are the same (in type & message), return
-			if (oldUser.Activity == newUser.Activity) return;
-
-			// Fetch the guild from the Database
-			var guild = database.GetGuild(newUser.Guild);
-
-			if (guild != null)
-			{
-				await UpdateRoles(oldUser, newUser, guild);
-			}
 		}
 
 		public async void ForceUpdate(SocketGuildUser user)

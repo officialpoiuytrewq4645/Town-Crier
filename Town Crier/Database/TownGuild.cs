@@ -10,6 +10,61 @@ using Amazon.DynamoDBv2.DataModel;
 
 namespace TownCrier.Database
 {
+	public class ReactionBasedRoleGrantingSettings
+	{
+		[DynamoDBProperty("message_settings")]
+		public HashSet<MessageSettings> MessageSettings { get; set; }
+
+		[DynamoDBProperty("remove_reacts_on_success")]
+		public bool RemoveReactOnSuccess { get; set; } = true;
+
+		[DynamoDBIgnore]
+		public Dictionary<ulong, MessageSettings> MessagesMap
+		{
+			get
+			{
+				if (messagesMap == null)
+				{
+					messagesMap = MessageSettings.ToDictionary(item => item.MessageToMonitor);
+				}
+
+				return messagesMap;
+			}
+		}
+
+		Dictionary<ulong, MessageSettings> messagesMap;
+	}
+
+	public class MessageSettings
+	{
+		[DynamoDBProperty("message_to_monitor")]
+		public ulong MessageToMonitor { get; set; }
+
+		[DynamoDBProperty("channel")]
+		public ulong Channel { get; set; }
+
+		[DynamoDBProperty("reactions_to_roles")]
+		public Dictionary<string, GrantingRoleSettings> ReactionsToRoles { get; set; }
+	}
+
+	public class GrantingRoleSettings
+	{
+		[DynamoDBProperty("role_to_grant")]
+		public ulong RoleToGrant { get; set; }
+
+		[DynamoDBProperty("granted_message")]
+		public string GrantedMessage { get; set; }
+
+		[DynamoDBProperty("messaging_channel")]
+		public ulong MessageChannel { get; set; }
+
+		[DynamoDBProperty("dm_on_grant")]
+		public bool DirectMessageOnGrant { get; set; }
+
+		[DynamoDBProperty("dm_message")]
+		public string DirectMessage { get; set; }
+	}
+
 	[DynamoDBTable("TC_Guilds")]
 	public class TownGuild
 	{
@@ -122,10 +177,20 @@ namespace TownCrier.Database
 		[DynamoDBProperty("wiki_icon")]
 		public string WikiIcon { get; set; } //https://d1u5p3l4wpay3k.cloudfront.net/atownshiptale_gamepedia_en/9/9e/WikiOnly.png
 
-		public string ParseMessage(SocketGuildUser user, DiscordSocketClient client)
+		[DynamoDBProperty("role_granting_settings")]
+		public ReactionBasedRoleGrantingSettings RoleGrantingSettings { get; set; }
+
+		public string ParseMessage(IGuildUser user, DiscordSocketClient client)
 		{
-			string returnstring = WelcomeMessage.Replace("{user}", user.Mention).Replace("{server}", client.GetGuild(GuildId).Name).Replace("{server:count}", client.GetGuild(GuildId).Users.Count.ToString());
+			return FormatMessage(WelcomeMessage, user, client);
+		}
+
+		public string FormatMessage(string message, IGuildUser user, DiscordSocketClient client)
+		{
+			string returnstring = message.Replace("{user}", user.Mention).Replace("{server}", client.GetGuild(GuildId).Name).Replace("{server:count}", client.GetGuild(GuildId).Users.Count.ToString());
+
 			returnstring = AdminRole != 0 ? returnstring.Replace("{admin}", user.Guild.GetRole(AdminRole)?.Mention) : returnstring;
+
 			return returnstring;
 		}
 	}

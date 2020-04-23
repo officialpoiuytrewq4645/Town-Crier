@@ -127,10 +127,10 @@ namespace DiscordBot.Modules
 			{
 				//SocketGuildUser discordUser = null;
 
-				SocketGuildUser discordUser = Context.Guild.Users.FirstOrDefault(item => (item.Nickname == null) ? item.Username.ToLower().Contains(person.ToLower()) : item.Nickname.ToLower().Contains(person.ToLower())); 
-					
-		
-				
+				SocketGuildUser discordUser = Context.Guild.Users.FirstOrDefault(item => (item.Nickname == null) ? item.Username.ToLower().Contains(person.ToLower()) : item.Nickname.ToLower().Contains(person.ToLower()));
+
+
+
 				//if(discordUser == null)
 				//{
 				//	discordUser = Context.Guild.Users.FirstOrDefault(item => item.Username.Equals(person, StringComparison.OrdinalIgnoreCase));

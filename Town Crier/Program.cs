@@ -31,9 +31,9 @@ namespace TownCrier
 
 		public async Task MainAsync()
 		{
-            Console.WriteLine("STARTING");
+			Console.WriteLine("STARTING");
 
-            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Data"));
+			Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Data"));
 			_client = new DiscordSocketClient();
 			_config = BuildConfig();
 
@@ -60,9 +60,11 @@ namespace TownCrier
 			await _client.SetGameAsync(_config["status"]);
 			await _client.StartAsync();
 
+			services.GetRequiredService<UserJoinManagement>();
+
 			await Task.Delay(-1);
 		}
-		
+
 		IServiceProvider ConfigureServices()
 		{
 			bool hasDDB = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TC_ACCESS_KEY"));
@@ -72,7 +74,7 @@ namespace TownCrier
 				Credentials = new BasicAWSCredentials(Environment.GetEnvironmentVariable("TC_ACCESS_KEY"), Environment.GetEnvironmentVariable("TC_SECRET_KEY")),
 			};
 
-            //awsOptions.DefaultClientConfig.HttpClientFactory = new DebugFactory(awsOptions.DefaultClientConfig.HttpClientFactory);
+			//awsOptions.DefaultClientConfig.HttpClientFactory = new DebugFactory(awsOptions.DefaultClientConfig.HttpClientFactory);
 
 			IServiceCollection result = new ServiceCollection()
 				// Base
@@ -124,23 +126,24 @@ namespace TownCrier
 				.AddSingleton<OutOfOffice>()
 				.AddSingleton<GettingStartedService>()
 				.AddSingleton<ActivityRoleService>()
+				.AddSingleton<UserJoinManagement>()
 				.AddSingleton<RoutineAnnouncementService>()
 				//Migrate
 				.AddSingleton<Migrator>();
-
-            return result.BuildServiceProvider();
+			
+			return result.BuildServiceProvider();
 		}
 
 		IConfiguration BuildConfig()
 		{
-            //if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("env_config")))
-            //{
-            //	return new ConfigurationBuilder()
-            //		.AddEnvironmentVariables()
-            //		.Build();
-            //}
-            
-            return new ConfigurationBuilder()
+			//if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("env_config")))
+			//{
+			//	return new ConfigurationBuilder()
+			//		.AddEnvironmentVariables()
+			//		.Build();
+			//}
+
+			return new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
 				.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "config.json"))
 				.Build();

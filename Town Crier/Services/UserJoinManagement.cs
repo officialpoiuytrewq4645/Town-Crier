@@ -27,72 +27,83 @@ namespace TownCrier
 
 		Task GuildAvailable(SocketGuild arg)
 		{
-			var guild = database.Guilds.FindById(arg.Id);
-
-			if (guild.RoleGrantingSettings != null)
+			_ = Task.Run(async () =>
 			{
-				settings.Add(guild.GuildId, guild);
-
-				Console.WriteLine("Handling reactions in guild: " + guild.GuildId);
-
 				try
 				{
-					ValidateAllReactionsAndRolesForGuild(guild);
+					var guild = database.Guilds.FindById(arg.Id);
+
+					if (guild.RoleGrantingSettings != null)
+					{
+						settings.Add(guild.GuildId, guild);
+
+						Console.WriteLine("Handling reactions in guild: " + guild.GuildId);
+
+						await ValidateAllReactionsAndRolesForGuild(guild);
+
+						if (!hasSubscribed)
+						{
+							hasSubscribed = true;
+
+							client.ReactionAdded -= HandleReactionAdded;
+							client.ReactionAdded += HandleReactionAdded;
+
+							Console.WriteLine("Starting to listen to reactions");
+						}
+					}
 				}
 				catch (Exception e)
 				{
 					Console.WriteLine(e);
-					Console.WriteLine("Failed validating all emotes on startup");
 				}
-
-				if (!hasSubscribed)
-				{
-					hasSubscribed = true;
-
-					client.ReactionAdded += HandleReactionAdded;
-
-					Console.WriteLine("Starting to listen to reactions");
-				}
-			}
+			});
 
 			return Task.CompletedTask;
 		}
 
-		async void ValidateAllReactionsAndRolesForGuild(TownGuild guildSettings)
+		async Task ValidateAllReactionsAndRolesForGuild(TownGuild guildSettings)
 		{
-			SocketGuild guild = client.GetGuild(guildSettings.GuildId);
-
-			foreach (var messageSettings in guildSettings.RoleGrantingSettings.MessageSettings)
+			try
 			{
-				var channel = guild.GetChannel(messageSettings.Channel);
+				SocketGuild guild = client.GetGuild(guildSettings.GuildId);
 
-				var message = await (channel as ISocketMessageChannel).GetMessageAsync(messageSettings.MessageToMonitor) as IUserMessage;
-
-				foreach (var reaction in message.Reactions)
+				foreach (var messageSettings in guildSettings.RoleGrantingSettings.MessageSettings)
 				{
-					if (messageSettings.ReactionsToRoles.TryGetValue(reaction.Key.Name, out GrantingRoleSettings grantingSettings))
+					var channel = guild.GetChannel(messageSettings.Channel);
+
+					var message = await (channel as ISocketMessageChannel).GetMessageAsync(messageSettings.MessageToMonitor) as IUserMessage;
+
+					foreach (var reaction in message.Reactions)
 					{
-						var reactedUsers = message.GetReactionUsersAsync(reaction.Key, 1000);
-
-						var flattenedUsers = await AsyncEnumerableExtensions.FlattenAsync(reactedUsers);
-
-						foreach (var reactedUser in flattenedUsers)
+						if (messageSettings.ReactionsToRoles.TryGetValue(reaction.Key.Name, out GrantingRoleSettings grantingSettings))
 						{
-							if (client.CurrentUser.Id == reactedUser.Id)
-							{
-								continue;
-							}
+							var reactedUsers = message.GetReactionUsersAsync(reaction.Key, 1000);
 
-							await GrantUserRoleBasedOnReaction(reaction.Key, message, guild, guildSettings, guild.GetUser(reactedUser.Id));
+							var flattenedUsers = await AsyncEnumerableExtensions.FlattenAsync(reactedUsers);
+
+							foreach (var reactedUser in flattenedUsers)
+							{
+								if (client.CurrentUser.Id == reactedUser.Id)
+								{
+									continue;
+								}
+
+								await GrantUserRoleBasedOnReaction(reaction.Key, message, guild, guildSettings, guild.GetUser(reactedUser.Id));
+							}
 						}
 					}
+
+					await message.RemoveAllReactionsAsync();
+
+					Emoji[] emojis = messageSettings.ReactionsToRoles.Select(item => new Emoji(item.Key)).ToArray();
+
+					await message.AddReactionsAsync(emojis);
 				}
-
-				await message.RemoveAllReactionsAsync();
-
-				Emoji[] emojis = messageSettings.ReactionsToRoles.Select(item => new Emoji(item.Key)).ToArray();
-
-				await message.AddReactionsAsync(emojis);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
+				Console.WriteLine("Failed validating all emotes on startup");
 			}
 		}
 

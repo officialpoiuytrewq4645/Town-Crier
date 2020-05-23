@@ -273,7 +273,7 @@ namespace TownCrier.Services
 				{
 					Console.WriteLine("UNSUPPORT : " + user.Username);
 
-					await user.SendMessageAsync("Oh no! You've lost your supporter role! It's been great having you with us in #supporter-chat. If you didn't mean to unsupport, check the Support page in your launcher ( or https://townshiptale.com/supporter ) to be sure your payment didn't fail. If you think this was a mistake, be sure to contact Joel, and he'll help you out!");
+					await user.SendMessageAsync("Oh no! You've lost your supporter role! It's been great having you with us in <#547204432144891907>. If you didn't mean to unsupport, check the Support page in your launcher ( or https://townshiptale.com/supporter ) to be sure your payment didn't fail. If you think this was a mistake, be sure to contact Joel, and he'll help you out!");
 
 					await user.RemoveRoleAsync(supporterRole);
 				}
@@ -293,7 +293,7 @@ namespace TownCrier.Services
 
 			EmbedBuilder embed = new EmbedBuilder();
 
-			embed.Description = $"{user.Username} became a supporter! Thanks for the support! Be sure to check out the #supporter-chat and #supporter-spoilers channels!";
+			embed.Description = $"{user.Username} became a supporter! Thanks for the support! Be sure to check out the <#547204432144891907> and <#560314409549824008> channels!";
 
 			embed.Url = "https://townshiptale.com/supporter";
 

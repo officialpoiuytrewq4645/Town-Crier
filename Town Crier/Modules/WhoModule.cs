@@ -153,7 +153,7 @@ namespace DiscordBot.Modules
 					return;
 				}
 
-				await ReplyAsync((discordUser.Nickname == null) ? discordUser.Username : discordUser.Nickname + " is " + user.Description);
+				await ReplyAsync((discordUser.Nickname == null) ? discordUser.Username + " is " + user.Description : discordUser.Nickname + " is " + user.Description);
 			}
 		}
 	}

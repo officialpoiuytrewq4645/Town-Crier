@@ -37,10 +37,11 @@ namespace DiscordBot.Modules
 		}
 
 		public static IEnumerable<Embed> GetEmbeds()
-		{ 
+		{
 			yield return GetEmbed("Welcome to A Township Tale!",
 						"Welcome to the ATT Discord!\nI've added some information below including where to download the game, where to find help, and other bits of information!\n\n" +
-						"Be sure to check out the [#rules](https://discord.gg/Jpe9FH9) and [#server-types](https://discord.gg/qnWESBN) channels!\n\n" +
+						"Be sure to check out the Discord [#rules](https://discord.gg/Jpe9FH9).\n\n" +
+						"To play, you'll need to download, complete the tutorial, and the find a server to join.\n\n" +
 						"A Township Tale can be downloaded through the [Alta Launcher](https://townshiptale.com/launcher)!",
 						"https://townshiptale.com/launcher",
 						true,
@@ -49,6 +50,15 @@ namespace DiscordBot.Modules
 						{
 							builder.WithImageUrl("https://i.imgur.com/AZpSLmC.png");
 						});
+
+			yield return GetEmbed("Finding a server",
+						"There are numerous A Township Tale servers!\n" +
+						"Some are vanilla, while others have modified the experience in various ways.\n\n" +
+						"You can find some in [#community-servers](https://discord.gg/EB5wDhW).\n\n" +
+						"You can also search for servers by tags in the Launcher. Click on the groups icon in the bar on the right.",
+						"",
+						true,
+						new Color(0xC9881E));
 
 			yield return GetEmbed("Can I support the game?",
 						"Your feedback is extremely helpful!\nCheck out the [Feedback Forum](https://feedback.townshiptale.com), and the [#fbi-discussion](https://discord.gg/eWsbcXb) channel!\n\nIf you would like to support financially, you can check out the cosmetic store (in the Alta Launcher) and/or [become a supporter](https://townshiptale.com/supporter)!",

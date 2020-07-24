@@ -6,23 +6,28 @@ using System.Threading.Tasks;
 
 namespace Town_Crier.Services
 {
-    class AmIRight
+	class AmIRight
     {
 		DiscordSocketClient discord;
+		Random random;
 
 		public AmIRight(DiscordSocketClient discord)
 		{
 			this.discord = discord;
+			
+			random = new Random();
 
 			discord.MessageReceived += AmIRightTask;
 		}
 
 		async Task AmIRightTask(SocketMessage message)
         {
-			if (message.Content.ToLower().Contains("am i right town crier") || message.Content.ToLower().Contains("am i right tc") && message.Content.Contains("?"))
+			string lowercase = message.Content.ToLower();
+			
+			if ((lowercase.Contains("am i right town crier") || lowercase.Contains("am i right tc")) && lowercase.Contains("?"))
 			{
 				// 50% chance for yes or no
-				if (new Random().Next(0, 10) > 5)
+				if (random.Next(0, 2) == 1)
 				{
 					await message.Channel.SendMessageAsync(message.Author.Mention + " - Yes.");
 				}

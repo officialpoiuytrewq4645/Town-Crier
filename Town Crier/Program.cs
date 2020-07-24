@@ -16,6 +16,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Town_Crier.Services;
 using TownCrier.Services;
 
 namespace TownCrier
@@ -49,6 +50,7 @@ namespace TownCrier
 			services.GetRequiredService<CrossAlerter>();
 			services.GetRequiredService<PointCounter>();
 			services.GetRequiredService<WikiSearcher>();
+			services.GetRequiredService<AmIRight>();
 			services.GetRequiredService<ChannelFilters>();
 			services.GetRequiredService<ActivityRoleService>();
 			services.GetRequiredService<Migrator>();

@@ -49,6 +49,7 @@ namespace TownCrier
 			services.GetRequiredService<DoYouCare>();
 			services.GetRequiredService<CrossAlerter>();
 			services.GetRequiredService<PointCounter>();
+			services.GetRequiredService<ContributorsList>();
 			services.GetRequiredService<WikiSearcher>();
 			services.GetRequiredService<AmIRight>();
 			services.GetRequiredService<ChannelFilters>();

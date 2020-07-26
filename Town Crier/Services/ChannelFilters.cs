@@ -68,6 +68,22 @@ namespace TownCrier.Services
 				Console.WriteLine(e.StackTrace);
 			}
 		}
+
+		int minImgHeight = 360;
+		int minImgWidth = 640;
+
+		public bool CheckIfAboveMinimum(SocketUserMessage dat)
+        {
+			// ok so this code may not be the greatest but it threw a error with other ways I tried so uh
+
+			bool isValid = false;
+
+			foreach(Attachment img in dat.Attachments)
+            {
+				isValid = img.Width > minImgWidth && img.Height > minImgHeight;
+			}
+			return isValid;
+        }
 		
 		async Task<bool> FilterScreenshots(ChannelFilter filter, SocketUserMessage message)
 		{
@@ -88,6 +104,12 @@ namespace TownCrier.Services
 
 				await message.DeleteAsync();
 
+				return false;
+			}
+            else if(!CheckIfAboveMinimum(message))
+            {
+				// Joel, I don't know what to put here, edit it pls.
+				await ReplyAndDelete(message, $"Hi {message.Author.Mention}! Make sure your image size is above 640x360!", 10);
 				return false;
 			}
 

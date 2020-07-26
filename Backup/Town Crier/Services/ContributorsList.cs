@@ -1,7 +1,6 @@
 ﻿using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,21 +12,17 @@ namespace Town_Crier.Services
 
 		public ContributorsList(DiscordSocketClient discord)
 		{
-			
 			this.discord = discord;
 
 			discord.MessageReceived += Contributors;
-			
 		}
 
-		// Contributer list - automatically updates from the github api.
+		// Contributors, add your name to this list.
 
 		async Task Contributors(SocketMessage message)
 		{
 			if (message.Content.ToLower().Contains("!contributors"))
-			{
-				
-
+			{			
 				await message.Channel.SendMessageAsync("These are the people who helped make Town Crier! " +
 					"Narmdo (Joel_Alta), " +
 					"Timo_Alta, " +

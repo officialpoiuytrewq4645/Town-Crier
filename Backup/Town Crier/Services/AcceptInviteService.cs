@@ -35,8 +35,7 @@ namespace TownCrier.Services
 		public AcceptInviteService(AltaAPI altaApi, TimerService timer)
 		{
 			AltaApi = altaApi;
-			//console logs are for debugging - remember to remove before pushing
-			
+
 			timer.OnClockInterval += AcceptAll;
 
 			Client = new HttpClient();
@@ -51,10 +50,7 @@ namespace TownCrier.Services
 
 			Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AltaApi.ApiClient.UserCredentials.AccessToken.Write());
 
-			Console.WriteLine("Setting up AcceptInviteService");
-
 			AcceptAll(null, null);
-
 		}
 
 		async void AcceptAll(object sender, IServiceProvider serviceProvider)
@@ -63,7 +59,7 @@ namespace TownCrier.Services
 
 			try
 			{
-				HttpResponseMessage response = await Client.GetAsync($"{Client.BaseAddress.AbsoluteUri}groups/invites");
+				HttpResponseMessage response = await Client.GetAsync("groups/invites");
 
 				string content = await response.Content.ReadAsStringAsync();
 
@@ -74,7 +70,7 @@ namespace TownCrier.Services
 					for (int i = 0; i < invites.Length; i++)
 					{
 						Console.WriteLine("Accept " + invites[i].id);
-						await Client.PostAsync($"{Client.BaseAddress.AbsoluteUri}groups/invites/" + invites[i].id, null);
+						await Client.PostAsync("groups/invites/" + invites[i].id, null);
 					}
 				}
 				else

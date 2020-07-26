@@ -106,7 +106,7 @@ namespace TownCrier.Services
 
 				return false;
 			}
-            else if(CheckIfAboveMinimum(message))
+            else if(!CheckIfAboveMinimum(message))
             {
 				// Joel, I don't know what to put here, edit it pls.
 				await ReplyAndDelete(message, $"Hi {message.Author.Mention}! Make sure your image size is above 640x360!", 10);

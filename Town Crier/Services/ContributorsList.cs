@@ -20,7 +20,7 @@ namespace Town_Crier.Services
 			
 		}
 
-		// Contributer list - automatically updates from the github api.
+		// Contributors, add your name to this list.
 
 		async Task Contributors(SocketMessage message)
 		{

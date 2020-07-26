@@ -35,7 +35,6 @@ namespace TownCrier.Services
 		public AcceptInviteService(AltaAPI altaApi, TimerService timer)
 		{
 			AltaApi = altaApi;
-			//console logs are for debugging - remember to remove before pushing
 			
 			timer.OnClockInterval += AcceptAll;
 
@@ -49,9 +48,7 @@ namespace TownCrier.Services
 
 			altaApi.EnsureLoggedIn().Wait();
 
-			Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AltaApi.ApiClient.UserCredentials.AccessToken.Write());
-
-			Console.WriteLine("Setting up AcceptInviteService");
+			Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AltaApi.ApiClient.UserCredentials.AccessToken.Write());	
 
 			AcceptAll(null, null);
 
